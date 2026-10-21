@@ -1,0 +1,8 @@
+---
+import { TYPES, TYPE_KEYS } from '../lib/content';
+const path = Astro.url.pathname;
+const links: [string, string][] = [['/archive/', '按时间'], ['/archive/tags/', '按标签'], ...TYPE_KEYS.map((k) => [`/${k}/`, TYPES[k].name] as [string, string])];
+---
+<nav class="subnav" aria-label="归档方式">
+  {links.map(([href, label]) => <a href={href} aria-current={path === href ? 'page' : undefined}>{label}</a>)}
+</nav>

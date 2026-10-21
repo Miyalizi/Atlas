@@ -1,0 +1,30 @@
+---
+import Base from '../../layouts/Base.astro';
+import EntryRow from '../../components/EntryRow.astro';
+import { getGraph, TYPES, TYPE_KEYS, typeOf, type TypeKey } from '../../lib/content';
+
+export function getStaticPaths() {
+  return TYPE_KEYS.map((type) => ({ params: { type } }));
+}
+const type = Astro.params.type as TypeKey;
+const { entries } = await getGraph();
+const list = entries.filter((e) => typeOf(e) === type);
+const intro: Record<TypeKey, string> = {
+  posts: '花了时间想清楚、写完整的东西。',
+  notes: '想到就记下的片段，可能以后会长成文章。',
+  media: '读过的书、看过的电影、玩过的游戏，以及当时的想法。',
+  projects: '做过和正在做的东西。',
+  links: '值得反复回看的网页、论文和工具。',
+};
+---
+<Base title={TYPES[type].name} description={intro[type]}>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>{TYPES[type].name}</h1>
+      <p>{intro[type]}</p>
+    </header>
+    <div class="section-head"><h2 class="sans">全部</h2><span class="count tnum">{list.length} 条</span></div>
+    <ul class="list">{list.map((e) => <EntryRow entry={e} />)}</ul>
+    {!list.length && <p class="empty-note">这里还没有内容。在 <code>src/content/{type}/</code> 里新建一个 Markdown 文件就会出现在这里。</p>}
+  </div>
+</Base>

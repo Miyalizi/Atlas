@@ -1,0 +1,27 @@
+---
+// Now、关于 这类独立页面
+import { getEntry, render } from 'astro:content';
+import Base from './Base.astro';
+import { fmtDate } from '../lib/content';
+interface Props { id: string }
+const page = await getEntry('pages', Astro.props.id);
+if (!page) throw new Error(`缺少 src/content/pages/${Astro.props.id}.md`);
+const { Content } = await render(page);
+---
+<Base title={page.data.title} description={page.data.description}>
+  <div class="wrap">
+    <section class="post-head">
+      <div></div>
+      <div>
+        <h1>{page.data.title}</h1>
+        {page.data.updated && <div class="meta tnum"><span>更新于 {fmtDate(page.data.updated)}</span>{page.data.location && <span>{page.data.location}</span>}</div>}
+        {page.data.description && <p class="dek">{page.data.description}</p>}
+      </div>
+    </section>
+    <section class="post-body">
+      <div></div>
+      <article class="prose"><Content /></article>
+      <slot />
+    </section>
+  </div>
+</Base>

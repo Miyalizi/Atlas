@@ -1,0 +1,88 @@
+---
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import EntryRow from '../components/EntryRow.astro';
+import Shape from '../components/Shape.astro';
+import { SITE } from '../site.config';
+import { getGraph, TYPES, TYPE_KEYS, typeOf, urlOf, fmtDate, excerpt, topTags } from '../lib/content';
+
+const { entries, back, edges } = await getGraph();
+const clusters = topTags(entries, 4);
+const graph = {
+  clusters,
+  typeNames: Object.fromEntries(TYPE_KEYS.map((k) => [k, TYPES[k].name])),
+  edges,
+  nodes: entries.map((e) => ({
+    id: e.id, url: urlOf(e), title: e.data.title, type: typeOf(e), date: fmtDate(e.data.date),
+    ex: excerpt(e, 60), back: back.get(e.id)!.length,
+    cluster: clusters.findIndex((c) => e.data.tags.includes(c)),
+  })),
+};
+const counts = Object.fromEntries(TYPE_KEYS.map((k) => [k, entries.filter((e) => typeOf(e) === k).length]));
+const firstYear = entries.length ? Math.min(...entries.map((e) => e.data.date.getFullYear()), SITE.since) : SITE.since;
+const now = await getEntry('pages', 'now');
+const NowContent = now ? (await render(now)).Content : null;
+---
+<Base>
+  <div class="wrap">
+    <section class="intro">
+      <div>
+        <h1>{SITE.name}<em>.</em></h1>
+        <p>{SITE.description}</p>
+      </div>
+      <div class="stats tnum">
+        <div><b>{entries.length}</b><span>条内容</span></div>
+        <div><b>{edges.length}</b><span>条关联</span></div>
+        <div><b>{firstYear}</b><span>开始记录</span></div>
+      </div>
+    </section>
+
+    <section class="atlas" id="atlas" aria-label="知识星图">
+      <div class="atlas-head">
+        <div class="legend" role="group" aria-label="按类型显示">
+          {TYPE_KEYS.map((k) => <button type="button" aria-pressed="true" data-type={k}><Shape type={k} />{TYPES[k].name}</button>)}
+        </div>
+        <div class="atlas-ctl">
+          <span class="hint">拖动平移 · ⌘/Ctrl+滚轮缩放 · 点击进入</span>
+          <button class="btn icon" type="button" data-zoom="out" aria-label="缩小">−</button>
+          <button class="btn icon" type="button" data-zoom="in" aria-label="放大">+</button>
+          <button class="btn icon" type="button" data-zoom="fit" aria-label="复位">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 6V2h4M14 6V2h-4M2 10v4h4M14 10v4h-4"/></svg>
+          </button>
+        </div>
+      </div>
+      <canvas role="img" aria-label={`内容关系图：${entries.length} 个节点，${edges.length} 条引用连线。下方列表可用键盘访问。`}></canvas>
+      <div class="atlas-tip" aria-hidden="true"></div>
+      <script type="application/json" set:html={JSON.stringify(graph).replace(/</g, '\\u003c')} />
+    </section>
+
+    <section class="reveal">
+      <div class="section-head"><h2>最近</h2><a href="/archive/">全部归档 →</a></div>
+      <ul class="list">
+        {entries.slice(0, 8).map((e) => <EntryRow entry={e} />)}
+      </ul>
+    </section>
+
+    <section class="duo">
+      {NowContent && (
+        <div class="now-mini reveal">
+          <div class="section-head"><h2>Now</h2><a href="/now/">完整页面 →</a></div>
+          <NowContent />
+          {now?.data.updated && <div class="stamp tnum">更新于 {fmtDate(now.data.updated)}{now.data.location && ` · ${now.data.location}`}</div>}
+        </div>
+      )}
+      <div class="reveal">
+        <div class="section-head"><h2>按类型浏览</h2><a href="/archive/tags/">标签 →</a></div>
+        <ul class="types tnum">
+          {TYPE_KEYS.map((k) => <li><a href={`/${k}/`}><Shape type={k} />{TYPES[k].name}</a><span class="n">{counts[k]}</span></li>)}
+        </ul>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import { mountStarmap } from '../scripts/starmap';
+  const el = document.getElementById('atlas');
+  if (el) mountStarmap(el);
+</script>

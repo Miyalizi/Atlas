@@ -1,0 +1,13 @@
+---
+// 每种内容类型一个形状：长文实心大圆、笔记小圆点、书影音空心圆、项目方块、链接十字
+import type { TypeKey } from '../lib/content';
+interface Props { type: TypeKey; class?: string }
+const { type, class: cls = '' } = Astro.props;
+---
+<svg class:list={['shape', cls]} viewBox="0 0 12 12" aria-hidden="true">
+  {type === 'posts' && <circle cx="6" cy="6" r="5" fill="currentColor" />}
+  {type === 'notes' && <circle cx="6" cy="6" r="2.6" fill="currentColor" />}
+  {type === 'media' && <circle cx="6" cy="6" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6" />}
+  {type === 'projects' && <rect x="2" y="2" width="8" height="8" fill="currentColor" />}
+  {type === 'links' && <path d="M6 1.5v9M1.5 6h9" stroke="currentColor" stroke-width="1.6" fill="none" />}
+</svg>

@@ -1,0 +1,22 @@
+---
+import Base from '../../../layouts/Base.astro';
+import ArchiveNav from '../../../components/ArchiveNav.astro';
+import { getGraph, allTags } from '../../../lib/content';
+const { entries } = await getGraph();
+const tags = allTags(entries);
+const max = Math.max(1, ...tags.map(([, n]) => n));
+---
+<Base title="标签" description="按标签浏览全部内容">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>标签</h1>
+      <p>{tags.length} 个标签。字号越大，内容越多。</p>
+      <ArchiveNav />
+    </header>
+    <div class="tagcloud">
+      {tags.map(([t, n]) => (
+        <a href={`/archive/tags/${encodeURIComponent(t)}/`} style={`font-size:${(0.95 + (n / max) * 0.9).toFixed(2)}rem`}>#{t}<sup class="tnum">{n}</sup></a>
+      ))}
+    </div>
+  </div>
+</Base>

@@ -1,0 +1,19 @@
+---
+import Shape from './Shape.astro';
+import { TYPES, typeOf, urlOf, vtName, fmtDate, excerpt, type Entry } from '../lib/content';
+interface Props { entry: Entry }
+const { entry } = Astro.props;
+const type = typeOf(entry);
+const { rating } = entry.data;
+---
+<li class:list={['row', type]}>
+  <div class="meta-line">
+    <time class="d tnum" datetime={entry.data.date.toISOString()}>{fmtDate(entry.data.date)}</time>
+    <span class="t"><Shape type={type} />{TYPES[type].name}</span>
+  </div>
+  <div>
+    <h3 class="vt-title" style={`view-transition-name:${vtName(entry)}`}><a href={urlOf(entry)}>{entry.data.title}</a></h3>
+    <p>{excerpt(entry)}{rating != null && <> <span class="stars" aria-label={`${rating} 星`}>{'★'.repeat(Math.round(rating))}</span></>}</p>
+  </div>
+  <span class="tags">{entry.data.tags.map((t) => '#' + t).join(' ')}</span>
+</li>

@@ -1,0 +1,26 @@
+---
+import Base from '../../../layouts/Base.astro';
+import EntryRow from '../../../components/EntryRow.astro';
+import ArchiveNav from '../../../components/ArchiveNav.astro';
+import { getGraph, allTags, type Entry } from '../../../lib/content';
+
+export async function getStaticPaths() {
+  const { entries } = await getGraph();
+  return allTags(entries).map(([tag]) => ({
+    params: { tag },
+    props: { tag, list: entries.filter((e) => e.data.tags.includes(tag)) },
+  }));
+}
+interface Props { tag: string; list: Entry[] }
+const { tag, list } = Astro.props;
+---
+<Base title={`#${tag}`} description={`标签「${tag}」下的全部内容`}>
+  <div class="wrap">
+    <header class="page-head">
+      <h1>#{tag}</h1>
+      <p>{list.length} 条内容</p>
+      <ArchiveNav />
+    </header>
+    <ul class="list" style="margin-top:32px">{list.map((e) => <EntryRow entry={e} />)}</ul>
+  </div>
+</Base>

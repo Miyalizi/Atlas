@@ -1,0 +1,95 @@
+---
+import '../styles/global.css';
+import { SITE } from '../site.config';
+
+interface Props { title?: string; description?: string; type?: 'website' | 'article' }
+const { title, description = SITE.description, type = 'website' } = Astro.props;
+const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.subtitle} ${SITE.subtitleEn}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const path = Astro.url.pathname;
+const nav = [
+  ['/posts/', '文章'], ['/notes/', '笔记'], ['/media/', '书影音'], ['/projects/', '项目'],
+  ['/links/', '收藏'], ['/archive/', '归档'], ['/now/', 'Now'], ['/about/', '关于'],
+];
+const fonts = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&display=swap';
+---
+<!doctype html>
+<html lang={SITE.locale}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="canonical" href={canonical} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="alternate" type="application/rss+xml" title={SITE.name} href="/rss.xml" />
+  <meta property="og:type" content={type} />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:url" content={canonical} />
+  <meta name="theme-color" content="#F5F4F1" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#131312" media="(prefers-color-scheme: dark)" />
+  <script is:inline>
+    // 在首帧之前决定深浅色，避免闪烁
+    (() => {
+      let t; try { t = localStorage.getItem('theme'); } catch {}
+      if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.dataset.theme = t;
+    })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <!-- 字体异步加载，不阻塞首屏；加载前用系统宋体/黑体 -->
+  <link rel="stylesheet" href={fonts} media="print" onload="this.media='all'" />
+  <noscript><link rel="stylesheet" href={fonts} /></noscript>
+  <slot name="head" />
+</head>
+<body>
+  <a class="skip" href="#main">跳到正文</a>
+  <header class="top">
+    <div class="wrap">
+      <a class="brand" href="/"><span class="seal">Lz</span>{SITE.name}<small>{SITE.subtitle} {SITE.subtitleEn}</small></a>
+      <nav class="nav" aria-label="主导航">
+        {nav.map(([href, label]) => <a href={href} aria-current={path.startsWith(href) ? 'page' : undefined}>{label}</a>)}
+      </nav>
+      <div class="tools">
+        <button class="btn" type="button" data-open-palette aria-label="搜索和命令（⌘K）">搜索 <kbd>⌘K</kbd></button>
+        <button class="btn icon" type="button" id="theme-toggle" aria-label="切换深浅色">
+          <svg class="moon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1Z"/></svg>
+          <svg class="sun" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><circle cx="8" cy="8" r="3"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3"/></svg>
+        </button>
+        <button class="btn icon menu-btn" type="button" id="menu-toggle" aria-label="菜单" aria-expanded="false" aria-controls="menu">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" aria-hidden="true"><path d="M2 5h12M2 11h12"/></svg>
+        </button>
+      </div>
+    </div>
+    <nav class="wrap menu" id="menu" aria-label="菜单" hidden>
+      {nav.map(([href, label]) => <a href={href}>{label}</a>)}
+    </nav>
+  </header>
+
+  <main id="main">
+    <slot />
+  </main>
+
+  <div class="wrap">
+    <footer class="site-foot">
+      <span>© {SITE.since}–{new Date().getFullYear()} {SITE.author} · 内容以 {SITE.license} 授权</span>
+      <span><a href="/rss.xml">RSS</a> · <a href="/archive/">归档</a> · <a href="/now/">Now</a> · <a href="/about/">关于</a></span>
+    </footer>
+  </div>
+
+  <div class="peek" id="peek" role="tooltip" aria-hidden="true"></div>
+  <div class="palette-bg" id="palette" hidden>
+    <div class="palette" role="dialog" aria-modal="true" aria-label="命令面板">
+      <input id="palette-input" placeholder="搜索全文，或输入命令…" autocomplete="off" spellcheck="false" aria-label="搜索" aria-controls="palette-results" />
+      <div class="res" id="palette-results" role="listbox"></div>
+      <div class="foot"><span>↑↓ 选择</span><span>↵ 打开</span><span>esc 关闭</span></div>
+    </div>
+  </div>
+
+  <script>
+    import '../scripts/site';
+  </script>
+</body>
+</html>

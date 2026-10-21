@@ -1,0 +1,108 @@
+---
+import { render } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import Shape from '../../components/Shape.astro';
+import {
+  getGraph, TYPES, KIND_NAMES, typeOf, slugOf, urlOf, vtName, fmtDate, excerpt, readingMinutes, linkContext, type Entry,
+} from '../../lib/content';
+
+export async function getStaticPaths() {
+  const { entries } = await getGraph();
+  return entries.map((entry) => ({ params: { type: typeOf(entry), slug: slugOf(entry) }, props: { entry } }));
+}
+interface Props { entry: Entry }
+const { entry } = Astro.props;
+const { byId, out, back, entries } = await getGraph();
+const { Content, headings } = await render(entry);
+const type = typeOf(entry);
+const d = entry.data;
+const toc = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const backs = back.get(entry.id)!.map((id) => byId.get(id)!);
+const outs = out.get(entry.id)!.map((id) => byId.get(id)!);
+const sameType = entries.filter((e) => typeOf(e) === type);
+const i = sameType.indexOf(entry);
+const older = sameType[i + 1], newer = sameType[i - 1];
+const host = (u: string) => { try { return new URL(u).host; } catch { return u; } };
+---
+<Base title={d.title} description={excerpt(entry, 120)} type="article">
+  <div class="progress" id="progress" aria-hidden="true"><i></i></div>
+  <div class="wrap">
+    <section class="post-head">
+      <div class="crumb"><a href="/">首页</a><span>/</span><a href={`/${type}/`}>{TYPES[type].name}</a></div>
+      <div>
+        <h1 class="vt-title" style={`view-transition-name:${vtName(entry)}`}>{d.title}</h1>
+        <div class="meta tnum">
+          <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
+          {d.updated && <span>更新于 {fmtDate(d.updated)}</span>}
+          {(type === 'posts' || type === 'notes') && <span>约 {readingMinutes(entry.body)} 分钟</span>}
+          {d.tags.length > 0 && <span>{d.tags.map((t) => <a href={`/archive/tags/${encodeURIComponent(t)}/`}>#{t} </a>)}</span>}
+          {backs.length > 0 && <a href="#backlinks">{backs.length} 处被引用</a>}
+        </div>
+        {d.description && <p class="dek">{d.description}</p>}
+        {(d.creator || d.kind || d.rating != null || d.url || d.status || d.repo) && (
+          <dl class="facts">
+            {d.kind && <div><dt>类型</dt><dd>{KIND_NAMES[d.kind]}</dd></div>}
+            {d.creator && <div><dt>作者</dt><dd>{d.creator}</dd></div>}
+            {d.rating != null && <div><dt>评分</dt><dd class="stars" aria-label={`${d.rating} / 5`}>{'★'.repeat(Math.round(d.rating))}{'☆'.repeat(5 - Math.round(d.rating))}</dd></div>}
+            {d.status && <div><dt>状态</dt><dd>{d.status}</dd></div>}
+            {d.url && <div><dt>链接</dt><dd><a href={d.url} rel="noopener">{host(d.url)} ↗</a></dd></div>}
+            {d.repo && <div><dt>代码</dt><dd><a href={d.repo} rel="noopener">{host(d.repo)} ↗</a></dd></div>}
+          </dl>
+        )}
+      </div>
+    </section>
+
+    <section class="post-body">
+      {toc.length >= 2 ? (
+        <aside class="toc" aria-label="目录">
+          <details open><summary class="label">目录</summary>
+            <ol>{toc.map((h) => <li class={`d${h.depth}`}><a href={`#${h.slug}`}>{h.text}</a></li>)}</ol>
+          </details>
+        </aside>
+      ) : <div></div>}
+      <article class="prose">
+        <Content />
+      </article>
+
+      <div class="after">
+        <section class="backlinks" id="backlinks">
+          <h2>引用了本文的内容 · <span class="tnum">{backs.length}</span></h2>
+          {backs.length ? (
+            <ul>{backs.map((s) => {
+              const c = linkContext(s, entry.id);
+              const st = typeOf(s);
+              return (
+                <li><a class="bl" href={urlOf(s)}>
+                  <span class="label"><Shape type={st} />{TYPES[st].name} · {fmtDate(s.data.date)}</span>
+                  <b class="vt-title" style={`view-transition-name:${vtName(s)}`}>{s.data.title}</b>
+                  <span class="ctx">{c ? <>…{c.before}<mark>{c.text}</mark>{c.after}…</> : excerpt(s, 60)}</span>
+                </a></li>
+              );
+            })}</ul>
+          ) : <p class="empty-note">还没有内容引用这里。</p>}
+          {outs.length > 0 && <>
+            <h2>本文提到</h2>
+            <ul>{outs.map((o) => {
+              const ot = typeOf(o);
+              return (
+                <li><a class="bl" href={urlOf(o)}>
+                  <span class="label"><Shape type={ot} />{TYPES[ot].name} · {fmtDate(o.data.date)}</span>
+                  <b>{o.data.title}</b>
+                  <span class="ctx">{excerpt(o, 60)}</span>
+                </a></li>
+              );
+            })}</ul>
+          </>}
+        </section>
+        <nav class="pager" aria-label="同类内容">
+          {older && <a href={urlOf(older)}>← 更早<b>{older.data.title}</b></a>}
+          {newer && <a class="next" href={urlOf(newer)}>更新 →<b>{newer.data.title}</b></a>}
+        </nav>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  import '../../scripts/reading';
+</script>

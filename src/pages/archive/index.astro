@@ -1,0 +1,39 @@
+---
+import Base from '../../layouts/Base.astro';
+import Shape from '../../components/Shape.astro';
+import ArchiveNav from '../../components/ArchiveNav.astro';
+import { getGraph, TYPES, typeOf, urlOf } from '../../lib/content';
+
+const { entries } = await getGraph();
+const years = new Map<number, typeof entries>();
+for (const e of entries) {
+  const y = e.data.date.getFullYear();
+  if (!years.has(y)) years.set(y, []);
+  years.get(y)!.push(e);
+}
+const md = (d: Date) => `${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+---
+<Base title="归档" description="按时间浏览全部内容">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>归档</h1>
+      <p>全部 {entries.length} 条内容，按时间倒序。</p>
+      <ArchiveNav />
+    </header>
+    <div class="section-head" style="padding-top:40px"><h2>按时间</h2></div>
+    {[...years].map(([y, list]) => (
+      <section class="year">
+        <h2 class="tnum">{y}<small>{list.length} 条</small></h2>
+        <ul>
+          {list.map((e) => (
+            <li>
+              <time class="d tnum" datetime={e.data.date.toISOString()}>{md(e.data.date)}</time>
+              <span title={TYPES[typeOf(e)].name}><Shape type={typeOf(e)} /></span>
+              <a href={urlOf(e)}>{e.data.title}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Base>
