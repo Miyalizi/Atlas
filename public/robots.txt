@@ -1,3 +1,3 @@
 User-agent: *
 Allow: /
-Sitemap: https://lizi.pages.dev/sitemap-index.xml
+Sitemap: https://lizi-atlas.pages.dev/sitemap-index.xml
