@@ -5,7 +5,7 @@ import sitemap from '@astrojs/sitemap';
 
 export default defineConfig({
   // 部署后改成你自己的域名，RSS 和 sitemap 会用到它
-  site: 'https://lizi.pages.dev',
+  site: 'https://lizi-atlas.pages.dev',
   trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
