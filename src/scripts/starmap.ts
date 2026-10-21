@@ -9,13 +9,19 @@ export function mountStarmap(el: HTMLElement) {
   const data: Data = JSON.parse(el.querySelector('script[type="application/json"]')!.textContent!);
   const cv = el.querySelector('canvas')!, ctx = cv.getContext('2d')!, tip = el.querySelector('.atlas-tip') as HTMLElement;
   const hidden = new Set<string>();
-  const css = (n: string) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  // 颜色只在换主题时读一次：getComputedStyle 每次都会强制样式计算，放在 draw 里会拖慢拖拽和悬停
+  let C = { ink: '', ink3: '', rule: '', acc: '', paper: '', sans: '' };
+  const readColors = () => {
+    const cs = getComputedStyle(document.documentElement), v = (n: string) => cs.getPropertyValue(n).trim();
+    C = { ink: v('--ink'), ink3: v('--ink-3'), rule: v('--rule'), acc: v('--accent'), paper: v('--paper'), sans: v('--sans') };
+  };
+  readColors();
 
   el.querySelectorAll<HTMLButtonElement>('.legend button').forEach((b) => b.addEventListener('click', () => {
     const on = b.getAttribute('aria-pressed') === 'true';
     b.setAttribute('aria-pressed', String(!on));
     on ? hidden.add(b.dataset.type!) : hidden.delete(b.dataset.type!);
-    draw();
+    request();
   }));
 
   // 确定性的力导向布局：同一份内容每次打开都是同一张图
@@ -52,7 +58,7 @@ export function mountStarmap(el: HTMLElement) {
     }
   }
 
-  let W = 0, H = 0, k = 1, tx = 0, ty = 0, dpr = 1;
+  let W = 0, H = 0, k = 1, tx = 0, ty = 0, dpr = 1, cvTop = 0;
   let hover: N | null = null;
   function fit() {
     if (!nodes.length) return;
@@ -66,12 +72,15 @@ export function mountStarmap(el: HTMLElement) {
     if (!r.width) return;
     dpr = Math.min(devicePixelRatio || 1, 2);
     const first = !W;
-    W = r.width; H = r.height; cv.width = W * dpr; cv.height = H * dpr;
+    W = r.width; H = r.height; cvTop = cv.offsetTop; cv.width = W * dpr; cv.height = H * dpr;
     if (first) fit();
     draw();
   }
+  // 同一帧里的多次指针事件只画一次
+  let raf = 0;
+  const request = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; draw(); }); };
   function draw() {
-    const ink = css('--ink'), ink3 = css('--ink-3'), rule = css('--rule'), acc = css('--accent'), paper = css('--paper'), sans = css('--sans');
+    const { ink, ink3, rule, acc, paper, sans } = C;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, W, H);
     // 极淡的点阵，只给出坐标感
@@ -137,16 +146,18 @@ export function mountStarmap(el: HTMLElement) {
   };
   const zoomAt = (f: number, x: number, y: number) => {
     const nk = Math.max(0.4, Math.min(3.2, k * f));
-    tx = x - ((x - tx) * nk) / k; ty = y - ((y - ty) * nk) / k; k = nk; draw();
+    tx = x - ((x - tx) * nk) / k; ty = y - ((y - ty) * nk) / k; k = nk; request();
   };
+  let tipFor: N | null = null;
   const showTip = (n: N | null, x = 0, y = 0) => {
-    if (!n) return tip.classList.remove('on');
+    if (!n) { tipFor = null; return tip.classList.remove('on'); }
+    tip.style.translate = `${Math.max(0, Math.min(x + 16, W - 270))}px ${y + cvTop + 16}px`;
+    if (n === tipFor) return;
+    tipFor = n;
     tip.innerHTML = '';
     const meta = document.createElement('span'); meta.textContent = `${data.typeNames[n.d.type]} · ${n.d.date} · ${n.d.back} 处引用`;
     const b = document.createElement('b'); b.textContent = n.d.title;
     tip.append(meta, b, document.createTextNode(n.d.ex));
-    tip.style.left = `${Math.max(0, Math.min(x + 16, W - 270))}px`;
-    tip.style.top = `${y + cv.offsetTop + 16}px`;
     tip.classList.add('on');
   };
 
@@ -172,10 +183,10 @@ export function mountStarmap(el: HTMLElement) {
       if (drag.n) { drag.n.x += dx / k; drag.n.y += dy / k; } else { tx += dx; ty += dy; }
       drag.x = e.offsetX; drag.y = e.offsetY;
       if (moved > 4) showTip(null);
-      draw(); return;
+      request(); return;
     }
     const n = hit(e.offsetX, e.offsetY);
-    if (n !== hover) { hover = n; cv.style.cursor = n ? 'pointer' : ''; draw(); }
+    if (n !== hover) { hover = n; cv.style.cursor = n ? 'pointer' : ''; request(); }
     showTip(n, e.offsetX, e.offsetY);
   });
   const end = (e: PointerEvent) => {
@@ -186,7 +197,7 @@ export function mountStarmap(el: HTMLElement) {
   };
   cv.addEventListener('pointerup', end);
   cv.addEventListener('pointercancel', end);
-  cv.addEventListener('pointerleave', () => { if (!drag) { hover = null; showTip(null); draw(); } });
+  cv.addEventListener('pointerleave', () => { if (!drag) { hover = null; showTip(null); request(); } });
   // 只在按住 ⌘/Ctrl（或触控板捏合）时缩放，不劫持页面滚动
   cv.addEventListener('wheel', (e) => {
     if (!e.ctrlKey && !e.metaKey) return;
@@ -194,8 +205,8 @@ export function mountStarmap(el: HTMLElement) {
   }, { passive: false });
   el.querySelector('[data-zoom="in"]')?.addEventListener('click', () => zoomAt(1.25, W / 2, H / 2));
   el.querySelector('[data-zoom="out"]')?.addEventListener('click', () => zoomAt(0.8, W / 2, H / 2));
-  el.querySelector('[data-zoom="fit"]')?.addEventListener('click', () => { fit(); draw(); });
-  document.addEventListener('themechange', () => requestAnimationFrame(draw));
-  document.fonts?.ready.then(draw);
+  el.querySelector('[data-zoom="fit"]')?.addEventListener('click', () => { fit(); request(); });
+  document.addEventListener('themechange', () => requestAnimationFrame(() => { readColors(); draw(); }));
+  document.fonts?.ready.then(() => { readColors(); request(); });
   new ResizeObserver(resize).observe(cv);
 }

@@ -33,12 +33,15 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
+/* 光晕坐标不继承：改它时浏览器只重算卡片自身，不必遍历卡片里的所有子元素 */
+@property --mx { syntax: "<length-percentage>"; inherits: false; initial-value: 50%; }
+@property --my { syntax: "<length-percentage>"; inherits: false; initial-value: 50%; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; scroll-padding-top: 88px; }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font-family: var(--serif); font-size: var(--fs-base); line-height: 1.8;
-  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
   padding-left: var(--gutter);
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
@@ -54,7 +57,7 @@ h1, h2, h3, h4, .sans { font-family: var(--sans); text-wrap: balance; }
 .skip:focus { left: 16px; }
 
 /* 顶栏 */
-.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); background: color-mix(in srgb, var(--paper) 96%, transparent); }
 .top .wrap { display: flex; align-items: center; gap: 20px; padding-block: 14px; }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; font-family: var(--sans); font-weight: 700; letter-spacing: .02em; white-space: nowrap; }
 .brand small { font-weight: 400; color: var(--ink-3); font-size: var(--fs-sm); }
@@ -112,9 +115,10 @@ kbd { font-family: var(--mono); font-size: 11px; }
 
 /* 内容列表 */
 .list { list-style: none; margin: 0; padding: 0; }
-.row { position: relative; display: grid; grid-template-columns: 112px 84px minmax(0, 1fr) auto; gap: 8px 24px; padding: 22px 14px; margin-inline: -14px; border-bottom: 1px solid var(--rule); border-radius: 6px; transition: transform var(--dur) var(--ease); }
-.row::before { content: ""; position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 70%); opacity: 0; transition: opacity var(--dur) var(--ease); pointer-events: none; }
-.row:hover::before { opacity: 1; }
+.row { position: relative; display: grid; grid-template-columns: 112px 84px minmax(0, 1fr) auto; gap: 8px 24px; padding: 22px 14px; margin-inline: -14px; border-bottom: 1px solid var(--rule); border-radius: 6px; overflow: clip; transition: transform var(--dur) var(--ease); }
+/* 光晕是一块固定大小的圆，跟随鼠标时只移动它（合成层平移），不重画渐变 */
+.row::before, .bl::before { content: ""; --mx: inherit; --my: inherit; position: absolute; left: 0; top: 0; width: 520px; height: 520px; margin: -260px 0 0 -260px; background: radial-gradient(circle closest-side, var(--glow), transparent 70%); translate: var(--mx) var(--my); opacity: 0; transition: opacity var(--dur) var(--ease); pointer-events: none; }
+.row:hover::before, .bl:hover::before { opacity: 1; }
 .row:hover { transform: translateX(4px); }
 .row .meta-line { display: contents; }
 .row .d { font-family: var(--sans); font-size: var(--fs-sm); color: var(--ink-3); padding-top: 3px; }
@@ -213,9 +217,8 @@ pre code { background: none; padding: 0; font-size: inherit; }
 .backlinks h2 { font-size: var(--fs-sm); font-weight: 500; color: var(--ink-3); margin: 0 0 12px; letter-spacing: .04em; }
 .backlinks ul { list-style: none; padding: 0; margin: 0 0 40px; display: grid; gap: 10px; }
 .bl { position: relative; display: block; text-decoration: none; padding: 16px 18px; border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; transition: border-color var(--dur) var(--ease), transform var(--dur) var(--ease); }
-.bl::before { content: ""; position: absolute; inset: 0; background: radial-gradient(220px circle at var(--mx, 50%) var(--my, 50%), var(--glow), transparent 70%); opacity: 0; transition: opacity var(--dur) var(--ease); }
 .bl:hover { border-color: var(--ink-3); transform: translateY(-2px); }
-.bl:hover::before { opacity: 1; }
+.bl::before { width: 440px; height: 440px; margin: -220px 0 0 -220px; }
 .bl .label { position: relative; display: flex; gap: 6px; align-items: center; }
 .bl .label .shape { width: 9px; height: 9px; }
 .bl b { position: relative; display: block; font-family: var(--sans); font-weight: 500; margin-top: 4px; width: fit-content; }

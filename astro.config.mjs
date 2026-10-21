@@ -9,6 +9,8 @@ export default defineConfig({
   trailingSlash: 'always',
   integrations: [mdx(), sitemap()],
   prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
+  // 支持的浏览器（Chrome/Edge）在悬停时直接预渲染目标页，点下去几乎是瞬开
+  experimental: { clientPrerender: true },
   markdown: {
     shikiConfig: {
       themes: { light: 'github-light', dark: 'github-dark-dimmed' },

@@ -15,7 +15,7 @@ const thumb = hasCover(entry);
     <span class="t"><Shape type={type} />{TYPES[type].name}</span>
   </div>
   <div>
-    <h3 class="vt-title" style={`view-transition-name:${vtName(entry)}`}><a href={urlOf(entry)}>{entry.data.title}</a></h3>
+    <h3 class="vt-title" data-vt={vtName(entry)}><a href={urlOf(entry)}>{entry.data.title}</a></h3>
     <p>{excerpt(entry)}{rating != null && <> <span class="stars" aria-label={`${rating} 星`}>{'★'.repeat(Math.round(rating))}</span></>}</p>
   </div>
   <span class="tags">{entry.data.tags.map((t) => '#' + t).join(' ')}</span>
