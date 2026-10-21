@@ -1,0 +1,20 @@
+---
+// 文章封面：自己的图走 astro:assets 压缩；否则用自动生成的星图，深浅两张按主题切换（隐藏的那张不会被懒加载下载）
+import { Image } from 'astro:assets';
+import { coverPath } from '../lib/cover';
+import type { Entry } from '../lib/content';
+interface Props { entry: Entry; class?: string; widths?: number[]; sizes: string; eager?: boolean }
+const { entry, class: cls = '', widths = [400, 800, 1200], sizes, eager = false } = Astro.props;
+const { cover, coverAlt = '' } = entry.data;
+const loading = eager ? 'eager' : 'lazy';
+---
+<div class:list={['cover', cls]}>
+  {cover ? (
+    <Image src={cover} alt={coverAlt} widths={widths.filter((w) => w <= cover.width)} sizes={sizes} loading={loading} format="webp" />
+  ) : (
+    <>
+      <img class="c-light" src={coverPath(entry, 'light')} alt="" width="1200" height="630" loading={loading} decoding="async" />
+      <img class="c-dark" src={coverPath(entry, 'dark')} alt="" width="1200" height="630" loading={loading} decoding="async" />
+    </>
+  )}
+</div>

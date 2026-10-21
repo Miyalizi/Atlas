@@ -5,13 +5,16 @@ import { z } from 'astro/zod';
 // 五类内容放在 src/content/ 下各自的文件夹里，共用一个集合，方便互相引用和统一检索
 const entries = defineCollection({
   loader: glob({ base: './src/content', pattern: '{posts,notes,media,projects,links}/**/*.{md,mdx}' }),
-  schema: z.object({
+  schema: ({ image }) => z.object({
     title: z.string(),
     date: z.coerce.date(),
     updated: z.coerce.date().optional(),
     description: z.string().optional(),
     tags: z.array(z.string()).default([]),
     draft: z.boolean().default(false),
+    // 封面：不写就自动生成星图封面；写相对路径（如 ./cover.jpg）则用自己的图
+    cover: image().optional(),
+    coverAlt: z.string().optional(),
     // 书影音
     creator: z.string().optional(),
     kind: z.enum(['book', 'film', 'series', 'music', 'game', 'podcast']).optional(),
