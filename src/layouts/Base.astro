@@ -37,6 +37,29 @@ const fonts = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;50
       document.documentElement.dataset.theme = t;
     })();
   </script>
+  <script is:inline>
+    // 跨页标题过渡：列表里的标题平时不带 view-transition-name，只在离开/回到页面时给被点中的那一条加上。
+    // 这样浏览器每次切页只截一个标题，而不是把列表里每一行都截图。
+    (() => {
+      const pick = (url) => {
+        if (!url) return null;
+        const path = new URL(url).pathname;
+        for (const el of document.querySelectorAll('[data-vt]')) {
+          const a = el.closest('a') || el.querySelector('a');
+          if (a && new URL(a.href).pathname === path) return el;
+        }
+        return null;
+      };
+      const tag = (vt, url) => {
+        const el = vt && pick(url);
+        if (!el) return;
+        el.style.viewTransitionName = el.dataset.vt;
+        vt.finished.finally(() => { el.style.viewTransitionName = ''; });
+      };
+      addEventListener('pageswap', (e) => tag(e.viewTransition, e.activation && e.activation.entry && e.activation.entry.url));
+      addEventListener('pagereveal', (e) => tag(e.viewTransition, window.navigation && navigation.activation && navigation.activation.from && navigation.activation.from.url));
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <!-- 字体异步加载，不阻塞首屏；加载前用系统宋体/黑体 -->

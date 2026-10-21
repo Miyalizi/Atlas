@@ -74,7 +74,7 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
               return (
                 <li><a class="bl" href={urlOf(s)}>
                   <span class="label"><Shape type={st} />{TYPES[st].name} · {fmtDate(s.data.date)}</span>
-                  <b class="vt-title" style={`view-transition-name:${vtName(s)}`}>{s.data.title}</b>
+                  <b class="vt-title" data-vt={vtName(s)}>{s.data.title}</b>
                   <span class="ctx">{c ? <>…{c.before}<mark>{c.text}</mark>{c.after}…</> : excerpt(s, 60)}</span>
                 </a></li>
               );

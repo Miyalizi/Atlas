@@ -42,13 +42,22 @@ menuBtn.addEventListener('click', () => {
 });
 
 /* ---------- 卡片光晕跟随 ---------- */
-document.addEventListener('pointermove', (e) => {
-  const el = (e.target as Element).closest?.('.row, .bl') as HTMLElement | null;
-  if (!el) return;
-  const r = el.getBoundingClientRect();
-  el.style.setProperty('--mx', `${e.clientX - r.left}px`);
-  el.style.setProperty('--my', `${e.clientY - r.top}px`);
-}, { passive: true });
+// 只给有鼠标的设备；每帧最多写一次，避免高回报率鼠标把一帧拆成好几次样式计算
+if (matchMedia('(hover: hover) and (pointer: fine)').matches) {
+  let glowEl: HTMLElement | null = null, gx = 0, gy = 0, glowRaf = 0;
+  document.addEventListener('pointermove', (e) => {
+    glowEl = (e.target as Element).closest?.('.row, .bl') as HTMLElement | null;
+    if (!glowEl) return;
+    gx = e.clientX; gy = e.clientY;
+    if (!glowRaf) glowRaf = requestAnimationFrame(() => {
+      glowRaf = 0;
+      if (!glowEl) return;
+      const r = glowEl.getBoundingClientRect();
+      glowEl.style.setProperty('--mx', `${gx - r.left}px`);
+      glowEl.style.setProperty('--my', `${gy - r.top}px`);
+    });
+  }, { passive: true });
+}
 
 /* ---------- ⌘K 命令面板 ---------- */
 const pal = $('palette'), input = $<HTMLInputElement>('palette-input'), res = $('palette-results');
