@@ -4,6 +4,14 @@ interface Data { nodes: NodeData[]; edges: [string, string][]; clusters: string[
 interface N { d: NodeData; x: number; y: number; vx: number; vy: number; cx: number; cy: number }
 
 const RADIUS: Record<string, number> = { posts: 7, notes: 3.6, media: 5, projects: 5.5, links: 4.2 };
+// 首次打开时星星按发布顺序依次亮起，最新一篇长文最后点亮为朱砂四角星；每颗淡入 ≤300ms，整段不到 1 秒，每个会话只放一次
+const LIGHT = 360, FADE = 220, PULSE = 300;
+const clamp01 = (v: number) => (v < 0 ? 0 : v > 1 ? 1 : v);
+/** 和站点 logo 同款的四角星 */
+function star4(ctx: CanvasRenderingContext2D, x: number, y: number, r: number) {
+  ctx.moveTo(x, y - r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.quadraticCurveTo(x, y, x, y + r);
+  ctx.quadraticCurveTo(x, y, x - r, y); ctx.quadraticCurveTo(x, y, x, y - r);
+}
 
 export function mountStarmap(el: HTMLElement) {
   const data: Data = JSON.parse(el.querySelector('script[type="application/json"]')!.textContent!);
@@ -45,11 +53,11 @@ export function mountStarmap(el: HTMLElement) {
       let dx = b.x - a.x, dy = b.y - a.y;
       const d2 = dx * dx + dy * dy || 0.01, d = Math.sqrt(d2);
       if (d > 400) continue;
-      const f = (2400 / d2) * alpha; dx /= d; dy /= d;
+      const f = (4200 / d2) * alpha; dx /= d; dy /= d;
       a.vx -= dx * f; a.vy -= dy * f; b.vx += dx * f; b.vy += dy * f;
     }
     for (const [a, b] of E) {
-      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, f = (d - 90) * 0.02 * alpha;
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1, f = (d - 105) * 0.02 * alpha;
       a.vx += (dx / d) * f; a.vy += (dy / d) * f; b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
     }
     for (const n of nodes) {
@@ -57,6 +65,17 @@ export function mountStarmap(el: HTMLElement) {
       n.x += n.vx; n.y += n.vy; n.vx *= 0.6; n.vy *= 0.6;
     }
   }
+
+  // 默认只给引用最多的几篇长文写名字，其余悬停才显示，避免标签挤成一团
+  const named = new Set(nodes.filter((n) => n.d.type === 'posts').sort((a, b) => b.d.back - a.d.back).slice(0, 7));
+  const newest = nodes.find((n) => n.d.type === 'posts') ?? nodes[0];
+  // 数据按时间倒序：越早的星越先亮
+  const delay = new Map(nodes.map((n, i) => [n, nodes.length > 1 ? ((nodes.length - 1 - i) / (nodes.length - 1)) * LIGHT : 0]));
+  let t0 = -1, now = 0;
+  try {
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !sessionStorage.getItem('atlas-lit')) { t0 = 0; sessionStorage.setItem('atlas-lit', '1'); }
+  } catch { /* 存储不可用就不放 */ }
+  const lit01 = (n: N) => (t0 < 0 ? 1 : clamp01((now - t0 - delay.get(n)!) / FADE));
 
   let W = 0, H = 0, k = 1, tx = 0, ty = 0, dpr = 1, cvTop = 0;
   let hover: N | null = null;
@@ -73,7 +92,7 @@ export function mountStarmap(el: HTMLElement) {
     dpr = Math.min(devicePixelRatio || 1, 2);
     const first = !W;
     W = r.width; H = r.height; cvTop = cv.offsetTop; cv.width = W * dpr; cv.height = H * dpr;
-    if (first) fit();
+    if (first) { fit(); if (t0 === 0) t0 = performance.now(); }
     draw();
   }
   // 同一帧里的多次指针事件只画一次
@@ -92,45 +111,74 @@ export function mountStarmap(el: HTMLElement) {
     ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * tx, dpr * ty);
     const lit = hover ? nbr.get(hover)! : null;
     const vis = (n: N) => !hidden.has(n.d.type);
+    now = performance.now();
+    const playing = t0 > 0 && now - t0 < LIGHT + FADE + PULSE;
     for (const [a, b] of E) {
       if (!vis(a) || !vis(b)) continue;
       const on = hover && (a === hover || b === hover);
       ctx.strokeStyle = on ? acc : rule;
-      ctx.globalAlpha = hover && !on ? 0.35 : 1;
+      ctx.globalAlpha = (hover && !on ? 0.35 : 1) * Math.min(lit01(a), lit01(b));
       ctx.lineWidth = (on ? 1.4 : 1) / k;
       ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
     }
+    const radius = (n: N) => (RADIUS[n.d.type] ?? 4) + Math.min(n.d.back, 4) * 0.6;
     for (const n of nodes) {
       if (!vis(n)) continue;
-      const t = n.d.type, r = (RADIUS[t] ?? 4) + Math.min(n.d.back, 4) * 0.6;
-      ctx.globalAlpha = lit && !lit.has(n) ? 0.22 : 1;
+      const t = n.d.type, r = radius(n), a = lit01(n);
+      ctx.globalAlpha = (lit && !lit.has(n) ? 0.22 : 1) * a;
       const c = n === hover ? acc : ink;
       ctx.fillStyle = c; ctx.strokeStyle = c; ctx.lineWidth = 1.6 / Math.max(k, 0.8);
       ctx.beginPath();
-      if (t === 'projects') ctx.fillRect(n.x - r * 0.85, n.y - r * 0.85, r * 1.7, r * 1.7);
+      if (n === newest) {
+        // 最新一篇：朱砂四角星 + 一圈细环；亮起的那一刻环向外扩散一次
+        ctx.fillStyle = acc; star4(ctx, n.x, n.y, r * 2); ctx.fill();
+        const p = t0 > 0 ? clamp01((now - t0 - delay.get(n)! - FADE * 0.5) / PULSE) : 1;
+        ctx.beginPath(); ctx.strokeStyle = acc; ctx.lineWidth = 1 / k;
+        ctx.globalAlpha *= 0.35 + (1 - p) * 0.45;
+        ctx.arc(n.x, n.y, r * (2 + p * 1.4), 0, 7); ctx.stroke();
+      }
+      else if (t === 'projects') ctx.fillRect(n.x - r * 0.85, n.y - r * 0.85, r * 1.7, r * 1.7);
       else if (t === 'links') { ctx.moveTo(n.x - r, n.y); ctx.lineTo(n.x + r, n.y); ctx.moveTo(n.x, n.y - r); ctx.lineTo(n.x, n.y + r); ctx.stroke(); }
       else if (t === 'media') { ctx.fillStyle = paper; ctx.arc(n.x, n.y, r, 0, 7); ctx.fill(); ctx.stroke(); }
       else { ctx.arc(n.x, n.y, r, 0, 7); ctx.fill(); }
-      const label = n === hover || (lit && lit.has(n)) || (t === 'posts' && k > 0.7) || k > 1.7;
-      if (label) {
-        ctx.font = `${n === hover ? 600 : 400} ${12 / k}px ${sans}`;
-        ctx.fillStyle = n === hover || t === 'posts' ? ink : ink3;
-        const s = n.d.title.length > 16 && n !== hover ? n.d.title.slice(0, 15) + '…' : n.d.title;
-        ctx.fillText(s, n.x + r + 6 / k, n.y + 4 / k);
-      }
     }
-    // 分区名
-    ctx.globalAlpha = hover ? 0.4 : 0.9;
+
+    // 文字统一在屏幕坐标里排，按优先级放，和已放下的重叠就不画
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.font = `500 11px ${sans}`; ctx.fillStyle = ink3;
+    const placed: [number, number, number, number][] = [];
+    const free = (x: number, y: number, w: number, h: number) =>
+      placed.every(([px, py, pw, ph]) => x + w + 4 < px || px + pw + 4 < x || y + h + 2 < py || py + ph + 2 < y);
+    const put = (s: string, x: number, y: number, font: string, color: string, alpha: number, force = false) => {
+      ctx.font = font;
+      const w = ctx.measureText(s).width;
+      if (!force && !free(x, y - 11, w, 14)) return;
+      placed.push([x, y - 11, w, 14]);
+      // 底色描边当衬底，压在连线和星点上也读得清
+      ctx.globalAlpha = alpha; ctx.lineJoin = 'round'; ctx.lineWidth = 4; ctx.strokeStyle = paper; ctx.strokeText(s, x, y);
+      ctx.fillStyle = color; ctx.fillText(s, x, y);
+    };
+    const label = (n: N, strong = false) => {
+      if (!vis(n)) return;
+      const s = n.d.title.length > 16 && !strong ? n.d.title.slice(0, 15) + '…' : n.d.title;
+      const r = n === newest ? radius(n) * 2 : radius(n);
+      const sx = (n.x + r) * k + tx + 6, sy = n.y * k + ty + 4;
+      const dim = lit && !lit.has(n) ? 0.22 : 1;
+      put(s, sx, sy, `${strong ? 600 : 400} 12px ${sans}`, strong || n.d.type === 'posts' ? ink : ink3, dim * lit01(n), strong);
+    };
+    if (hover && vis(hover)) label(hover, true);
+    label(newest);
     // 分区名放在该分区节点的重心上方
     data.clusters.forEach((name, c) => {
-      const ms = nodes.filter((n) => n.d.cluster === c && !hidden.has(n.d.type));
+      const ms = nodes.filter((n) => n.d.cluster === c && vis(n));
       if (!ms.length) return;
       const x = ms.reduce((s, n) => s + n.x, 0) / ms.length, y = Math.min(...ms.map((n) => n.y));
       const s = [...name].join(' ');
-      ctx.fillText(s, x * k + tx - ctx.measureText(s).width / 2, y * k + ty - 22);
+      ctx.font = `500 11px ${sans}`;
+      put(s, x * k + tx - ctx.measureText(s).width / 2, y * k + ty - 22, ctx.font, ink3, (hover ? 0.4 : 0.9) * (t0 > 0 ? clamp01((now - t0) / (LIGHT + FADE)) : 1));
     });
+    if (lit) for (const n of lit) if (n !== hover) label(n);
+    for (const n of nodes) if (named.has(n) || k > 1.7) label(n);
+    if (playing) request();
     ctx.globalAlpha = 1;
   }
 
