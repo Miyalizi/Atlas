@@ -4,6 +4,8 @@ import { getGraph, typeOf, type Entry } from './content';
 
 export const COVER_W = 1200;
 export const COVER_H = 630;
+/** 文章页 Banner 用的宽版，比例 3:1，构图按高度等比收紧 */
+export const BANNER_H = 400;
 
 const PALETTES = {
   light: { bg: '#ECEAE5', grid: 'rgba(28,27,25,.07)', dim: 'rgba(28,27,25,.38)', line: 'rgba(28,27,25,.45)', ink: '#1C1B19', accent: '#B8372A' },
@@ -33,10 +35,10 @@ const star4 = (x: number, y: number, r: number) =>
 
 export interface CoverInfo { seed: string; no: number; tag?: string }
 
-export function coverSvg({ seed, no, tag }: CoverInfo, theme: CoverTheme, opts: { ascii?: boolean } = {}) {
+export function coverSvg({ seed, no, tag }: CoverInfo, theme: CoverTheme, opts: { ascii?: boolean; wide?: boolean } = {}) {
   const c = PALETTES[theme];
   const r = rng(hash(seed));
-  const W = COVER_W, H = COVER_H;
+  const W = COVER_W, H = opts.wide ? BANNER_H : COVER_H;
   let s = `<rect width="${W}" height="${H}" fill="${c.bg}"/>`;
 
   // 赤经赤纬网格：以画面下方外侧一点为中心的同心弧与放射线
@@ -83,7 +85,7 @@ export function coverSvg({ seed, no, tag }: CoverInfo, theme: CoverTheme, opts: 
   const de = `${r() < 0.5 ? '+' : '−'}${Math.floor(r() * 80)}°`;
   const t = tag && (!opts.ascii || /^[\x20-\x7e]+$/.test(tag)) ? ' · ' + esc(tag.toUpperCase()) : '';
   s += `<g font-family="ui-monospace, Menlo, 'DejaVu Sans Mono', monospace" font-size="18" fill="${c.dim}" letter-spacing="2">`;
-  s += `<text x="56" y="${H - 100}">ATLAS · NO.${String(no).padStart(3, '0')}</text><text x="56" y="${H - 74}">RA ${ra} · DEC ${de}${t}</text></g>`;
+  s += `<text x="56" y="${H - (opts.wide ? 64 : 100)}">ATLAS · NO.${String(no).padStart(3, '0')}</text><text x="56" y="${H - (opts.wide ? 38 : 74)}">RA ${ra} · DEC ${de}${t}</text></g>`;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${s}</svg>`;
 }
@@ -97,5 +99,5 @@ export async function coverInfo(entry: Entry): Promise<CoverInfo> {
 
 /** 长文和项目默认带封面；其他类型只有手动写了 cover 才显示 */
 export const hasCover = (e: Entry) => !!e.data.cover || ['posts', 'projects'].includes(typeOf(e));
-export const coverPath = (e: Entry, theme: CoverTheme) => `/covers/${e.id}-${theme}.svg`;
+export const coverPath = (e: Entry, theme: CoverTheme, wide = false) => `/covers/${e.id}-${theme}${wide ? '-wide' : ''}.svg`;
 export const ogPath = (e: Entry) => `/og/${e.id}.png`;

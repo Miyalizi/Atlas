@@ -1,6 +1,7 @@
 ---
 title: 怎么用好 Harness：模型之外的那一半
 date: 2026-10-21
+updated: 2026-10-24
 tags: [AI编程, Agent, Harness]
 description: Agent = 模型 + Harness。换模型之前，先把模型外面那层“马具”调好。
 ---
@@ -27,6 +28,44 @@ description: Agent = 模型 + Harness。换模型之前，先把模型外面那�
 - **生成和评审分开**。Agent 给自己打分普遍偏高，验收标准要在动手前定好（见[先写验收标准](/notes/acceptance-first/)）。
 - **用文件和 git 存状态**。计划写进文件、阶段性提交，[上下文](/posts/context-management/)重置也不会丢进度。
 - **定期做减法**。模型变强后，以前为弱模型加的脚手架可能反而碍事。
+
+## 我自己的配置
+
+说起来容易，下面是我在[这个博客](/projects/atlas/)仓库里实际在用的两样东西。
+
+**一份很短的 CLAUDE.md。** 只有二十来行，每一条都对应一次真实的翻车：
+
+```markdown
+# 项目说明
+Astro 静态博客。内容在 src/content/，样式全部在 src/styles/global.css。
+
+# 规则
+- 改样式后，给出改前改后的截图：浅色、深色、1440 宽、390 宽各一张。
+- 不要引入新的 npm 依赖，除非我同意。
+- 中文文案用全角标点，中英文之间加空格。
+- 不要“顺手”重构没让你改的文件。
+```
+
+第一条是因为星图有一次改完“测试全过”，打开一看标题糊成一团；最后一条是因为它曾经在修一个按钮的时候，顺手把整个列表组件重写了。
+
+**一个编辑后自动构建的 Hook。** 写在 `.claude/settings.json` 里：
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "npm run build --silent > /dev/null || (echo '构建失败，先修好再继续' >&2; exit 2)" }]
+      }
+    ]
+  }
+}
+```
+
+构建失败时退出码是 2，报错会直接喂回给 Agent，它自己就会去修。成功时什么也不输出，不占上下文。装上它之后，我再也没收到过一个连构建都过不了的改动。
+
+两样加起来不到五十行，但它们比换一个更强的模型管用得多。
 
 ## 现成的 Harness 怎么选
 

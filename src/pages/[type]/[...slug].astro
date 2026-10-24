@@ -5,6 +5,7 @@ import Shape from '../../components/Shape.astro';
 import Cover from '../../components/Cover.astro';
 import { getImage } from 'astro:assets';
 import { hasCover, ogPath } from '../../lib/cover';
+import { seriesOf } from '../../lib/series';
 import {
   getGraph, TYPES, KIND_NAMES, typeOf, slugOf, urlOf, vtName, fmtDate, excerpt, readingMinutes, linkContext, type Entry,
 } from '../../lib/content';
@@ -25,9 +26,12 @@ const outs = out.get(entry.id)!.map((id) => byId.get(id)!);
 const sameType = entries.filter((e) => typeOf(e) === type);
 const i = sameType.indexOf(entry);
 const older = sameType[i + 1], newer = sameType[i - 1];
+const ser = await seriesOf(entry);
 const og = d.cover
   ? (await getImage({ src: d.cover, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src
   : ogPath(entry);
+// 引用和“本文提到”各自默认只露出前几条，其余折叠
+const SHOW = 5;
 const host = (u: string) => { try { return new URL(u).host; } catch { return u; } };
 ---
 <Base title={d.title} description={excerpt(entry, 120)} type="article" image={og}>
@@ -36,6 +40,7 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
     <section class="post-head">
       <div class="crumb"><a href="/">首页</a><span>/</span><a href={`/${type}/`}>{TYPES[type].name}</a></div>
       <div>
+        {ser && <a class="kicker" href={`/series/#${ser.series.key}`}><b>{ser.series.name}</b><span class="tnum">第 {ser.index + 1} / {ser.list.length} 篇</span></a>}
         <h1 class="vt-title" style={`view-transition-name:${vtName(entry)}`}>{d.title}</h1>
         <div class="meta tnum">
           <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
@@ -58,7 +63,7 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
       </div>
     </section>
 
-    {hasCover(entry) && <Cover entry={entry} class="banner" sizes="(max-width: 1200px) 100vw, 1200px" eager />}
+    {hasCover(entry) && <Cover entry={entry} class="banner" sizes="(max-width: 1200px) 100vw, 1200px" eager wide />}
 
     <section class="post-body">
       {toc.length >= 2 ? (
@@ -72,40 +77,56 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
         <Content />
       </article>
 
+      <div class="fin" aria-hidden="true"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M8 0Q8 8 16 8Q8 8 8 16Q8 8 0 8Q8 8 8 0Z"/></svg></div>
+
       <div class="after">
+        {ser && (
+          <nav class="series-nav" aria-label={`系列：${ser.series.name}`}>
+            <div class="top"><span>专题 · <a href={`/series/#${ser.series.key}`}>{ser.series.name}</a></span><span class="tnum">{ser.index + 1} / {ser.list.length}</span></div>
+            <div class="dots" aria-hidden="true">
+              {ser.list.map((e, k) => <a href={urlOf(e)} tabindex="-1" title={e.data.title} class:list={{ done: k < ser.index, on: k === ser.index }}></a>)}
+            </div>
+            <div class="pn">
+              {ser.prev && <a href={urlOf(ser.prev)}>← 上一篇<b>{ser.prev.data.title}</b></a>}
+              {ser.next ? <a class="next" href={urlOf(ser.next)}>下一篇 →<b>{ser.next.data.title}</b></a>
+                : <a class="next" href="/series/">本系列读完了 →<b>看看其他专题</b></a>}
+            </div>
+          </nav>
+        )}
         <section class="backlinks" id="backlinks">
-          <h2>引用了本文的内容 · <span class="tnum">{backs.length}</span></h2>
-          {backs.length ? (
-            <ul>{backs.map((s) => {
-              const c = linkContext(s, entry.id);
+          {[
+            { key: 'back', title: '引用了本文', list: backs, ctx: true },
+            { key: 'out', title: '本文提到', list: outs, ctx: false },
+          ].filter((g) => g.list.length > 0).map((g) => {
+            const row = (s: Entry) => {
+              const c = g.ctx ? linkContext(s, entry.id) : null;
               const st = typeOf(s);
               return (
-                <li><a class="bl" href={urlOf(s)}>
-                  <span class="label"><Shape type={st} />{TYPES[st].name} · {fmtDate(s.data.date)}</span>
-                  <b class="vt-title" data-vt={vtName(s)}>{s.data.title}</b>
-                  <span class="ctx">{c ? <>…{c.before}<mark>{c.text}</mark>{c.after}…</> : excerpt(s, 60)}</span>
+                <li><a class="bl" href={urlOf(s)} title={TYPES[st].name}>
+                  <Shape type={st} />
+                  <b class="vt-title" data-vt={g.ctx ? vtName(s) : undefined}>{s.data.title}</b>
+                  <time class="tnum" datetime={s.data.date.toISOString()}>{fmtDate(s.data.date)}</time>
+                  {c && <span class="ctx">{c.before}<mark>{c.text}</mark>{c.after}</span>}
                 </a></li>
               );
-            })}</ul>
-          ) : <p class="empty-note">还没有内容引用这里。</p>}
-          {outs.length > 0 && <>
-            <h2>本文提到</h2>
-            <ul>{outs.map((o) => {
-              const ot = typeOf(o);
-              return (
-                <li><a class="bl" href={urlOf(o)}>
-                  <span class="label"><Shape type={ot} />{TYPES[ot].name} · {fmtDate(o.data.date)}</span>
-                  <b>{o.data.title}</b>
-                  <span class="ctx">{excerpt(o, 60)}</span>
-                </a></li>
-              );
-            })}</ul>
-          </>}
+            };
+            return (
+              <div class="group">
+                <h2>{g.title}<span class="n tnum">{g.list.length}</span></h2>
+                <ul>{g.list.slice(0, SHOW).map(row)}</ul>
+                {g.list.length > SHOW && (
+                  <details class="more"><summary>展开其余 {g.list.length - SHOW} 条</summary>
+                    <ul>{g.list.slice(SHOW).map(row)}</ul>
+                  </details>
+                )}
+              </div>
+            );
+          })}
         </section>
-        <nav class="pager" aria-label="同类内容">
+        {!ser && (older || newer) && <nav class="pager" aria-label="同类内容">
           {older && <a href={urlOf(older)}>← 更早<b>{older.data.title}</b></a>}
           {newer && <a class="next" href={urlOf(newer)}>更新 →<b>{newer.data.title}</b></a>}
-        </nav>
+        </nav>}
       </div>
     </section>
   </div>

@@ -1,4 +1,49 @@
 ---
-import Page from '../layouts/Page.astro';
+// 关于页：开头一张“星表”，把几篇代表作排成一组星图卡片，然后是 about.md 的正文
+import { getEntry, render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import { getGraph, TYPES, typeOf, urlOf, excerpt } from '../lib/content';
+import { coverPath } from '../lib/cover';
+
+// 想换星表里的文章，改这里的 id 即可（需要是带封面的长文章或项目）
+const PICKS = ['posts/harness-engineering', 'posts/solo-dev-ai-workflow', 'posts/ai-reading-map', 'projects/atlas', 'posts/indie-pricing', 'posts/fed-dot-plot'];
+
+const page = (await getEntry('pages', 'about'))!;
+const { Content } = await render(page);
+const { byId } = await getGraph();
+const picks = PICKS.map((id) => byId.get(id)).filter((e) => !!e);
 ---
-<Page id="about" />
+<Base title={page.data.title} description={page.data.description}>
+  <div class="wrap">
+    <section class="post-head">
+      <div></div>
+      <div>
+        <h1>你好，我是 Lizi<em class="dot">.</em></h1>
+        <p class="dek">{page.data.description}</p>
+      </div>
+    </section>
+
+    <section class="sheet" aria-labelledby="sheet-title">
+      <div class="sheet-head">
+        <h2 id="sheet-title">从这里开始读</h2>
+        <span class="label">Star chart · {picks.length} 篇</span>
+      </div>
+      <ol class="film">
+        {picks.map((e, i) => (
+          <li>
+            <a href={urlOf(e)}>
+              <span class="edge tnum" aria-hidden="true"><span>NO.{String(i + 1).padStart(2, '0')}</span><span>{TYPES[typeOf(e)].name}</span></span>
+              <span class="frame"><img src={coverPath(e, 'dark')} alt="" width="1200" height="630" loading="lazy" decoding="async" /></span>
+              <span class="cap"><b>{e.data.title}</b><span class="ex">{excerpt(e, 40)}</span></span>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="post-body">
+      <div></div>
+      <article class="prose"><Content /></article>
+    </section>
+  </div>
+</Base>

@@ -9,7 +9,7 @@ const fullTitle = title ? `${title} · ${SITE.name}` : `${SITE.name} · ${SITE.s
 const canonical = new URL(Astro.url.pathname, Astro.site);
 const path = Astro.url.pathname;
 const nav = [
-  ['/posts/', '文章'], ['/notes/', '笔记'], ['/media/', '书影音'], ['/projects/', '项目'],
+  ['/series/', '专题'], ['/posts/', '文章'], ['/notes/', '笔记'], ['/media/', '书影音'], ['/projects/', '项目'],
   ['/links/', '收藏'], ['/archive/', '归档'], ['/now/', 'Now'], ['/about/', '关于'],
 ];
 const fonts = 'https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Noto+Serif+SC:wght@400;600&display=swap';

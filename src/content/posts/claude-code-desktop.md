@@ -30,7 +30,7 @@ Anthropic 在 2026 年 4 月重做了 Claude Code 桌面版，思路很明确：
 
 ## 几个小提醒
 
-- 桌面版和终端共享同一套用量额度（Pro/Max 的 5 小时窗口和周限额），并行开得多，额度掉得也快。怎么选档位见 [Claude Pro 还是 Max](/posts/claude-plans/)。
+- 桌面版和终端共享同一套用量额度（Pro/Max 的 5 小时窗口和周限额），并行开得多，额度掉得也快。怎么选档位见 [Claude Pro 还是 Max](/posts/overseas-plans/#claude)。
 - 长期不用的会话要及时归档，不然侧栏会乱。
 - 需要定时、无人值守的任务，用 [Routines](/posts/claude-code-routines/) 放到云端，而不是让桌面版一直开着。
 - 终端版的习惯同样适用，见 [Claude Code 终端的十个习惯](/posts/claude-code-habits/)。
