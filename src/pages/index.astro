@@ -20,24 +20,30 @@ const graph = {
 };
 const counts = Object.fromEntries(TYPE_KEYS.map((k) => [k, entries.filter((e) => typeOf(e) === k).length]));
 const firstYear = entries.length ? Math.min(...entries.map((e) => e.data.date.getFullYear()), SITE.since) : SITE.since;
+const latest = entries.find((e) => typeOf(e) === 'posts');
 const now = await getEntry('pages', 'now');
 const NowContent = now ? (await render(now)).Content : null;
 ---
 <Base>
   <div class="wrap">
-    <section class="intro">
-      <div>
+    <section class="atlas hero" id="atlas" aria-label="知识星图">
+      <div class="hero-copy">
         <h1>{SITE.name}<em>.</em></h1>
         <p>{SITE.description}</p>
+        <div class="stats tnum">
+          <div><b>{entries.length}</b><span>条内容</span></div>
+          <div><b>{edges.length}</b><span>条关联</span></div>
+          <div><b>{firstYear}</b><span>开始记录</span></div>
+        </div>
+        {latest && (
+          <a class="latest" href={urlOf(latest)}>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1Q8 8 15 8Q8 8 8 15Q8 8 1 8Q8 8 8 1Z"/></svg>
+            <span class="label">最新</span><span class="lt">{latest.data.title}</span>
+          </a>
+        )}
       </div>
-      <div class="stats tnum">
-        <div><b>{entries.length}</b><span>条内容</span></div>
-        <div><b>{edges.length}</b><span>条关联</span></div>
-        <div><b>{firstYear}</b><span>开始记录</span></div>
-      </div>
-    </section>
-
-    <section class="atlas" id="atlas" aria-label="知识星图">
+      <canvas role="img" aria-label={`内容关系图：${entries.length} 个节点，${edges.length} 条引用连线。下方列表可用键盘访问。`}></canvas>
+      <div class="atlas-tip" aria-hidden="true"></div>
       <div class="atlas-head">
         <div class="legend" role="group" aria-label="按类型显示">
           {TYPE_KEYS.map((k) => <button type="button" aria-pressed="true" data-type={k}><Shape type={k} />{TYPES[k].name}</button>)}
@@ -51,8 +57,6 @@ const NowContent = now ? (await render(now)).Content : null;
           </button>
         </div>
       </div>
-      <canvas role="img" aria-label={`内容关系图：${entries.length} 个节点，${edges.length} 条引用连线。下方列表可用键盘访问。`}></canvas>
-      <div class="atlas-tip" aria-hidden="true"></div>
       <script type="application/json" set:html={JSON.stringify(graph).replace(/</g, '\\u003c')} />
     </section>
 

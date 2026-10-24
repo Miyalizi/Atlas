@@ -78,10 +78,19 @@ kbd { font-family: var(--mono); font-size: 11px; }
 :root[data-theme="dark"] .moon { display: none; }
 
 /* 首页开头 */
-.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 300px); gap: 24px 64px; align-items: end; padding-block: 72px 32px; }
-.intro h1 { font-size: var(--fs-xxl); line-height: 1.05; letter-spacing: -.02em; margin: 0; font-weight: 700; }
-.intro h1 em { font-style: normal; color: var(--accent); }
-.intro p { margin: 18px 0 0; max-width: 34em; color: var(--ink-2); font-size: var(--fs-md); line-height: 1.7; }
+.hero { border-top: 0; margin-top: 8px; }
+/* 宽屏时文字叠在星图左侧，星图让出这一块（starmap.ts 读 .hero-copy 的宽度）；文字不挡拖拽 */
+.hero-copy { position: absolute; left: 0; top: clamp(40px, 9vh, 88px); z-index: 1; width: min(400px, 38%); pointer-events: none; }
+.hero-copy a { pointer-events: auto; }
+.hero h1 { font-size: var(--fs-xxl); line-height: 1.05; letter-spacing: -.02em; margin: 0; font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.hero-copy p { margin: 18px 0 0; color: var(--ink-2); font-size: var(--fs-md); line-height: 1.7; }
+.hero-copy .stats { margin-top: 28px; }
+.latest { display: flex; align-items: baseline; gap: 8px; margin-top: 36px; padding-top: 14px; border-top: 1px solid var(--rule); font-family: var(--sans); font-size: var(--fs-sm); text-decoration: none; color: var(--ink); }
+.latest svg { width: 12px; height: 12px; fill: var(--accent); flex: none; align-self: center; }
+.latest .label { flex: none; }
+.latest .lt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-bottom: 1px solid transparent; transition: border-color var(--dur) var(--ease); }
+.latest:hover .lt { border-color: var(--accent); }
 .stats { display: grid; grid-template-columns: repeat(3, auto); gap: 4px 28px; justify-content: start; font-family: var(--sans); }
 .stats b { display: block; font-size: var(--fs-lg); font-weight: 500; line-height: 1.1; }
 .stats span { font-size: var(--fs-xs); color: var(--ink-3); }
@@ -95,6 +104,8 @@ kbd { font-family: var(--mono); font-size: 11px; }
 .legend button[aria-pressed="false"] { opacity: .38; }
 .atlas-ctl { display: flex; gap: 6px; align-items: center; font-family: var(--sans); font-size: var(--fs-xs); color: var(--ink-3); }
 .atlas canvas { display: block; width: 100%; height: clamp(340px, 58vh, 560px); cursor: grab; touch-action: none; }
+.hero canvas { height: clamp(520px, 78vh, 720px); }
+.hero .atlas-head { border-top: 1px solid var(--rule); }
 .atlas canvas.dragging { cursor: grabbing; }
 .atlas-tip { position: absolute; left: 0; top: 0; pointer-events: none; font-family: var(--sans); font-size: var(--fs-xs); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 8px 10px; box-shadow: var(--shadow); max-width: 260px; line-height: 1.5; opacity: 0; transform: translateY(4px); transition: opacity 150ms var(--ease), transform 150ms var(--ease); }
 .atlas-tip.on { opacity: 1; transform: none; }
@@ -292,7 +303,8 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
 
 /* 手机 */
 @media (max-width: 860px) {
-  .intro { grid-template-columns: 1fr; padding-block: 44px 24px; }
+  .hero-copy { position: static; width: auto; padding-block: 44px 8px; }
+  .hero canvas { height: clamp(340px, 62vh, 480px); }
   .row { grid-template-columns: minmax(0, 1fr); gap: 4px; padding: 18px 12px; margin-inline: -12px; }
   .row .meta-line { display: flex; gap: 12px; align-items: center; }
   .row .tags { display: none; }

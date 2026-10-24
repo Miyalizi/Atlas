@@ -83,8 +83,11 @@ export function mountStarmap(el: HTMLElement) {
     if (!nodes.length) return;
     const xs = nodes.map((n) => n.x), ys = nodes.map((n) => n.y);
     const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
-    k = Math.min(W / (maxX - minX + 240), H / (maxY - minY + 90), 1.6);
-    tx = W / 2 - ((minX + maxX) / 2) * k; ty = H / 2 - ((minY + maxY) / 2) * k;
+    // 首页宽屏时标题叠在左侧，星图只占右边那块
+    const copy = el.querySelector<HTMLElement>('.hero-copy');
+    const left = copy && getComputedStyle(copy).position === 'absolute' ? copy.offsetWidth + 48 : 0;
+    k = Math.min((W - left) / (maxX - minX + 240), H / (maxY - minY + 90), 1.6);
+    tx = left + (W - left) / 2 - ((minX + maxX) / 2) * k; ty = H / 2 - ((minY + maxY) / 2) * k;
   }
   function resize() {
     const r = cv.getBoundingClientRect();
