@@ -34,7 +34,7 @@ OpenAI 的 Codex 在 2026 年变化很大。到 10 月，它有三个入口：Ch
 
 ## 选哪个档位
 
-免费档和 Go（$8/月）只有 GPT-6 Luna、没有 CLI；Plus（$20/月）能用 GPT-6 Astra、GPT-6.1 Sol 等；Pro 分 $100/$200/$500 三档，没有 5 小时限制。细节见 [ChatGPT / Codex 档位怎么选](/posts/chatgpt-codex-plans/)。
+免费档和 Go（$8/月）只有 GPT-6 Luna、没有 CLI；Plus（$20/月）能用 GPT-6 Astra、GPT-6.1 Sol 等；Pro 分 $100/$200/$500 三档，没有 5 小时限制。细节见 [ChatGPT / Codex 档位怎么选](/posts/overseas-plans/#chatgpt-与-codex)。
 
 和 Claude Code 怎么取舍：Codex 强在系统级沙箱和 worktree，Claude Code 强在 Hook 和子 Agent。两个都订 $20 档、按任务挑着用，是很多人的做法，见[全球订阅性价比](/posts/global-best-value/)。
 

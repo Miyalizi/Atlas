@@ -26,7 +26,7 @@ Google 的 Gemini 4 Argon 在 2026 年 10 月 13 日正式开放（模型 ID `ge
 - **Antigravity（Google 的 Agent 开发工具）**：Ultra 和部分企业版可用。
 - **Gemini CLI**：截至发布时还停留在 3.1 Pro。
 
-所以如果你只订了 AI Pro（$19.99/月），能在 App 里用，但编程工具链里用不上。订阅怎么选见 [Google AI 套餐值不值](/posts/google-ai-plans/)。
+所以如果你只订了 AI Pro（$19.99/月），能在 App 里用，但编程工具链里用不上。订阅怎么选见 [Google AI 套餐值不值](/posts/overseas-plans/#google)。
 
 ## 我的用法
 

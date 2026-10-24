@@ -23,17 +23,13 @@ description: 本站 AI 工具、模型选型与成本相关文章的总索引，
 - [用 Hooks 把规则变成硬约束](/notes/claude-code-hooks/)
 - [Routines：让 Claude Code 在你睡觉时干活](/posts/claude-code-routines/)
 - [Opus 5.5 还是 Fable 5.1](/notes/opus-vs-fable/)
-- [Claude Pro 还是 Max：怎么选](/posts/claude-plans/)
 
 ## 三、Codex 与其他工具
 
 - [用好 Codex：App、CLI 与 worktree](/posts/codex-guide/)
 - [Codex 沙箱模式怎么选](/notes/codex-sandbox/)
-- [ChatGPT / Codex 档位怎么选](/posts/chatgpt-codex-plans/)
-- [Cursor 新套餐怎么选](/posts/cursor-2026-plans/)
 - [Trae CN：零成本入门 AI 编程](/notes/trae-cn/)
 - [Gemini 4 Argon 与 Antigravity：谁值得用](/posts/gemini-4-argon/)
-- [Google AI 套餐值不值](/posts/google-ai-plans/)
 
 ## 四、Harness 的各个部件
 
@@ -57,6 +53,7 @@ description: 本站 AI 工具、模型选型与成本相关文章的总索引，
 
 - [主流模型 API 价格速查（2026 年 10 月）](/posts/model-price-table/)
 - [订阅还是 API：算一笔账](/posts/subscription-vs-api/)
+- [海外 AI 订阅怎么选：Claude、ChatGPT、Cursor、Google](/posts/overseas-plans/)
 - [每月 100 元、20 美元、200 美元：三档 AI 工具配置](/posts/budget-stacks/)
 - [别让 AI 账单失控](/posts/ai-cost-control/)
 - [缓存命中就是省钱](/notes/prompt-caching/)

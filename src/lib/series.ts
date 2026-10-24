@@ -18,8 +18,7 @@ export const SERIES = [
     name: '算成本',
     blurb: '订阅还是 API、哪一档最划算，以及怎么不让账单失控。',
     items: [
-      'posts/subscription-vs-api', 'posts/claude-plans', 'posts/chatgpt-codex-plans', 'posts/cursor-2026-plans',
-      'posts/google-ai-plans', 'posts/china-coding-plans', 'posts/global-best-value', 'posts/budget-stacks',
+      'posts/subscription-vs-api', 'posts/overseas-plans', 'posts/china-coding-plans', 'posts/global-best-value', 'posts/budget-stacks',
       'posts/ai-cost-control', 'notes/prompt-caching',
     ],
   },
