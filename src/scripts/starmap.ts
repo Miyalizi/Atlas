@@ -145,9 +145,36 @@ export function mountStarmap(el: HTMLElement) {
     return best;
   };
   const zoomAt = (f: number, x: number, y: number) => {
+    stopTween();
     const nk = Math.max(0.4, Math.min(3.2, k * f));
     tx = x - ((x - tx) * nk) / k; ty = y - ((y - ty) * nk) / k; k = nk; request();
   };
+  // 按钮触发的缩放和复位用短过渡：画面一下子跳到新位置，人会找不到刚才看的那颗星。
+  // 滚轮和双指捏合本身就是连续的，直接跟手，不加过渡。
+  let tween = 0;
+  const stopTween = () => { cancelAnimationFrame(tween); tween = 0; };
+  const glide = (change: () => void) => {
+    const k0 = k, x0 = tx, y0 = ty;
+    change();
+    const k1 = k, x1 = tx, y1 = ty;
+    stopTween();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return request();
+    k = k0; tx = x0; ty = y0;
+    const t0 = performance.now(), dur = 260;
+    const step = (now: number) => {
+      const p = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      // 缩放按比例插值，平移跟着同一条曲线走，放大缩小的速度感才均匀
+      const kk = k0 * Math.pow(k1 / k0, e), f = k0 === k1 ? e : (kk - k0) / (k1 - k0);
+      k = kk; tx = x0 + (x1 - x0) * f; ty = y0 + (y1 - y0) * f;
+      draw();
+      tween = p < 1 ? requestAnimationFrame(step) : 0;
+    };
+    tween = requestAnimationFrame(step);
+  };
+  const zoomBy = (f: number) => glide(() => {
+    const nk = Math.max(0.4, Math.min(3.2, k * f)), x = W / 2, y = H / 2;
+    tx = x - ((x - tx) * nk) / k; ty = y - ((y - ty) * nk) / k; k = nk;
+  });
   let tipFor: N | null = null;
   const showTip = (n: N | null, x = 0, y = 0) => {
     if (!n) { tipFor = null; return tip.classList.remove('on'); }
@@ -167,6 +194,7 @@ export function mountStarmap(el: HTMLElement) {
     cv.setPointerCapture(e.pointerId);
     pts.set(e.pointerId, [e.offsetX, e.offsetY]);
     if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); drag = null; return; }
+    stopTween();
     drag = { n: hit(e.offsetX, e.offsetY), x: e.offsetX, y: e.offsetY }; moved = 0;
     cv.classList.add('dragging');
   });
@@ -203,9 +231,9 @@ export function mountStarmap(el: HTMLElement) {
     if (!e.ctrlKey && !e.metaKey) return;
     e.preventDefault(); zoomAt(Math.exp(-e.deltaY * 0.004), e.offsetX, e.offsetY);
   }, { passive: false });
-  el.querySelector('[data-zoom="in"]')?.addEventListener('click', () => zoomAt(1.25, W / 2, H / 2));
-  el.querySelector('[data-zoom="out"]')?.addEventListener('click', () => zoomAt(0.8, W / 2, H / 2));
-  el.querySelector('[data-zoom="fit"]')?.addEventListener('click', () => { fit(); request(); });
+  el.querySelector('[data-zoom="in"]')?.addEventListener('click', () => zoomBy(1.25));
+  el.querySelector('[data-zoom="out"]')?.addEventListener('click', () => zoomBy(0.8));
+  el.querySelector('[data-zoom="fit"]')?.addEventListener('click', () => glide(fit));
   document.addEventListener('themechange', () => requestAnimationFrame(() => { readColors(); draw(); }));
   document.fonts?.ready.then(() => { readColors(); request(); });
   new ResizeObserver(resize).observe(cv);

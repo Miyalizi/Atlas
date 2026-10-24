@@ -338,3 +338,39 @@ html.theme-vt::view-transition-old(root), html.theme-vt::view-transition-new(roo
   .row.has-thumb .thumb { grid-column: 2; grid-row: 1 / span 2; width: 96px; margin-top: 0; }
   .banner { aspect-ratio: 2 / 1; margin-bottom: 28px; }
 }
+
+/* ---------- 交互细节：切换要连贯，没有结果的操作要有回应 ---------- */
+/* 汉堡按钮：两道横线在展开时变成一个叉，告诉用户再点一下就收起 */
+.menu-btn svg path { transition: d var(--dur) var(--ease); }
+.menu-btn[aria-expanded="true"] svg path { d: path("M3 3l10 10M3 13 13 3"); }
+
+/* 命令面板：结果区高度固定，边打字边出结果时面板不跟着一伸一缩，底部提示也一直待在原位 */
+.palette .res { height: min(52vh, 420px); }
+.palette .it { transition: background 120ms var(--ease); }
+
+/* 内链预览卡：已经打开时在链接之间平移，而不是消失再出现 */
+.peek.moving { transition: opacity 180ms var(--ease), transform 180ms var(--ease), left 200ms var(--ease), top 200ms var(--ease); }
+
+/* 目录：一根滑动的红线代替逐条点亮 */
+.toc ol { position: relative; }
+.toc ol.has-marker a.on { border-color: transparent; }
+.toc-marker { position: absolute; left: -1px; top: 0; width: 1px; height: 0; background: var(--accent); opacity: 0; pointer-events: none; transition: transform 220ms var(--ease), height 220ms var(--ease), opacity var(--dur) var(--ease); }
+/* 手机上的目录折叠：展开收起有高度过渡（支持的浏览器才生效，其余照旧瞬开） */
+@supports (interpolate-size: allow-keywords) {
+  .toc details { interpolate-size: allow-keywords; }
+  .toc details::details-content { block-size: 0; overflow: clip; transition: block-size var(--dur) var(--ease), content-visibility var(--dur) allow-discrete; }
+  .toc details[open]::details-content { block-size: auto; }
+}
+
+/* 代码块复制：按钮平时淡出，悬停或聚焦代码块时出现，点完原地变“已复制” */
+.code { position: relative; margin: 1.6em 0; }
+.code pre { margin: 0; }
+.copy { position: absolute; top: 8px; right: 8px; font-family: var(--sans); font-size: var(--fs-xs); color: var(--ink-2); background: var(--paper); border: 1px solid var(--rule); border-radius: 5px; height: 26px; padding: 0 9px; cursor: pointer; opacity: 0; transition: opacity var(--dur) var(--ease), color var(--dur) var(--ease), border-color var(--dur) var(--ease); }
+.code:hover .copy, .copy:focus-visible, .copy.done { opacity: 1; }
+.copy:hover { color: var(--ink); border-color: var(--ink-3); }
+.copy.done { color: var(--accent); border-color: var(--accent); }
+@media (hover: none) { .copy { opacity: 1; } }
+
+/* 轻提示：底部居中，出现和消失都只是淡入加一点位移 */
+.toast { position: fixed; left: 50%; bottom: max(24px, env(safe-area-inset-bottom, 0px)); z-index: 60; translate: -50% 0; font-family: var(--sans); font-size: var(--fs-sm); color: var(--paper); background: var(--ink); border-radius: 999px; padding: 8px 16px; box-shadow: var(--shadow); opacity: 0; transform: translateY(8px); pointer-events: none; transition: opacity 180ms var(--ease), transform 180ms var(--ease); }
+.toast.on { opacity: 1; transform: none; }

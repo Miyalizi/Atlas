@@ -22,6 +22,19 @@ function update() {
   if (on === current) return;
   current = on;
   links.forEach((a) => a.classList.toggle('on', decodeURIComponent(a.hash.slice(1)) === on));
+  moveMarker();
+}
+// 目录高亮：一根红线在条目之间滑动，而不是这一条熄灭、那一条亮起，读者能看出自己是“往下走了一节”
+const tocList = document.querySelector<HTMLElement>('.toc ol');
+const marker = tocList && document.createElement('i');
+if (tocList && marker) { marker.className = 'toc-marker'; marker.setAttribute('aria-hidden', 'true'); tocList.append(marker); tocList.classList.add('has-marker'); }
+function moveMarker() {
+  if (!marker || !tocList) return;
+  const a = links.find((l) => l.classList.contains('on'));
+  if (!a) { marker.style.opacity = '0'; return; }
+  marker.style.opacity = '1';
+  marker.style.transform = `translateY(${a.offsetTop}px)`;
+  marker.style.height = `${a.offsetHeight}px`;
 }
 addEventListener('scroll', () => { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
 if (prose) new ResizeObserver(() => requestAnimationFrame(measure)).observe(prose);
@@ -30,3 +43,5 @@ measure();
 
 // 手机上目录默认收起
 if (matchMedia('(max-width: 860px)').matches) document.querySelector<HTMLDetailsElement>('.toc details')?.removeAttribute('open');
+// 手机上目录收起时量不到位置，展开后再对一次
+document.querySelector('.toc details')?.addEventListener('toggle', moveMarker);
