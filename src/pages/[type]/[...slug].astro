@@ -5,6 +5,7 @@ import Shape from '../../components/Shape.astro';
 import Cover from '../../components/Cover.astro';
 import { getImage } from 'astro:assets';
 import { hasCover, ogPath } from '../../lib/cover';
+import { seriesOf } from '../../lib/series';
 import {
   getGraph, TYPES, KIND_NAMES, typeOf, slugOf, urlOf, vtName, fmtDate, excerpt, readingMinutes, linkContext, type Entry,
 } from '../../lib/content';
@@ -25,6 +26,7 @@ const outs = out.get(entry.id)!.map((id) => byId.get(id)!);
 const sameType = entries.filter((e) => typeOf(e) === type);
 const i = sameType.indexOf(entry);
 const older = sameType[i + 1], newer = sameType[i - 1];
+const ser = await seriesOf(entry);
 const og = d.cover
   ? (await getImage({ src: d.cover, width: 1200, height: 630, fit: 'cover', format: 'jpg' })).src
   : ogPath(entry);
@@ -38,6 +40,7 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
     <section class="post-head">
       <div class="crumb"><a href="/">首页</a><span>/</span><a href={`/${type}/`}>{TYPES[type].name}</a></div>
       <div>
+        {ser && <a class="kicker" href={`/series/#${ser.series.key}`}><b>{ser.series.name}</b><span class="tnum">第 {ser.index + 1} / {ser.list.length} 篇</span></a>}
         <h1 class="vt-title" style={`view-transition-name:${vtName(entry)}`}>{d.title}</h1>
         <div class="meta tnum">
           <time datetime={d.date.toISOString()}>{fmtDate(d.date)}</time>
@@ -77,6 +80,19 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
       <div class="fin" aria-hidden="true"><svg viewBox="0 0 16 16"><path fill="currentColor" d="M8 0Q8 8 16 8Q8 8 8 16Q8 8 0 8Q8 8 8 0Z"/></svg></div>
 
       <div class="after">
+        {ser && (
+          <nav class="series-nav" aria-label={`系列：${ser.series.name}`}>
+            <div class="top"><span>专题 · <a href={`/series/#${ser.series.key}`}>{ser.series.name}</a></span><span class="tnum">{ser.index + 1} / {ser.list.length}</span></div>
+            <div class="dots" aria-hidden="true">
+              {ser.list.map((e, k) => <a href={urlOf(e)} tabindex="-1" title={e.data.title} class:list={{ done: k < ser.index, on: k === ser.index }}></a>)}
+            </div>
+            <div class="pn">
+              {ser.prev && <a href={urlOf(ser.prev)}>← 上一篇<b>{ser.prev.data.title}</b></a>}
+              {ser.next ? <a class="next" href={urlOf(ser.next)}>下一篇 →<b>{ser.next.data.title}</b></a>
+                : <a class="next" href="/series/">本系列读完了 →<b>看看其他专题</b></a>}
+            </div>
+          </nav>
+        )}
         <section class="backlinks" id="backlinks">
           {[
             { key: 'back', title: '引用了本文', list: backs, ctx: true },
@@ -107,10 +123,10 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
             );
           })}
         </section>
-        <nav class="pager" aria-label="同类内容">
+        {!ser && <nav class="pager" aria-label="同类内容">
           {older && <a href={urlOf(older)}>← 更早<b>{older.data.title}</b></a>}
           {newer && <a class="next" href={urlOf(newer)}>更新 →<b>{newer.data.title}</b></a>}
-        </nav>
+        </nav>}
       </div>
     </section>
   </div>

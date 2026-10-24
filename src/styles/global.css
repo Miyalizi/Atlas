@@ -155,6 +155,56 @@ kbd { font-family: var(--mono); font-size: 11px; }
   }
 }
 
+/* 专题页 */
+.series-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 56px; margin-top: 24px; }
+.series { padding-block: 40px 8px; border-top: 1px solid var(--ink); scroll-margin-top: 88px; }
+.series-head { display: flex; align-items: baseline; gap: 14px; font-family: var(--sans); }
+.series-no { font-size: var(--fs-sm); color: var(--accent); font-weight: 500; }
+.series-head h2 { margin: 0; font-size: var(--fs-lg); line-height: 1.2; }
+.series-head .count { margin-left: auto; font-size: var(--fs-sm); color: var(--ink-3); }
+.series-blurb { color: var(--ink-2); margin: 10px 0 20px; max-width: 30em; }
+.series-list { list-style: none; margin: 0; padding: 0; font-family: var(--sans); }
+.series-list a { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--rule); color: var(--ink); text-decoration: none; font-size: var(--fs-base); line-height: 1.5; transition: color var(--dur) var(--ease); }
+.series-list a:hover { color: var(--accent); }
+.series-list .i { color: var(--ink-3); font-size: var(--fs-sm); }
+.series-list .shape { width: 8px; height: 8px; color: var(--ink-3); }
+@media (max-width: 860px) { .series-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* 文章所属系列：标题上方的眉题 + 文末的系列导航 */
+.kicker { display: inline-flex; gap: 8px; align-items: baseline; font-family: var(--sans); font-size: var(--fs-sm); color: var(--ink-3); text-decoration: none; margin-bottom: 14px; }
+.kicker b { color: var(--accent); font-weight: 500; }
+.kicker:hover b { text-decoration: underline; text-underline-offset: 3px; }
+.series-nav { border: 1px solid var(--rule); border-radius: 8px; padding: 18px 20px; margin-bottom: 48px; font-family: var(--sans); }
+.series-nav .top { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: var(--fs-sm); color: var(--ink-3); }
+.series-nav .top a { color: var(--ink); text-decoration: none; font-weight: 500; }
+.series-nav .top a:hover { color: var(--accent); }
+.series-nav .dots { display: flex; gap: 4px; margin: 12px 0 14px; }
+.series-nav .dots a { flex: 1; height: 3px; border-radius: 2px; background: var(--rule); }
+.series-nav .dots a.done { background: var(--ink-3); }
+.series-nav .dots a.on { background: var(--accent); }
+.series-nav .pn { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: var(--fs-sm); }
+.series-nav .pn a { color: var(--ink-3); text-decoration: none; }
+.series-nav .pn a.next { grid-column: 2; text-align: right; }
+.series-nav .pn b { display: block; color: var(--ink); font-weight: 500; margin-top: 2px; transition: color var(--dur) var(--ease); }
+.series-nav .pn a:hover b { color: var(--accent); }
+
+/* 首页专题条 */
+.series-strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); font-family: var(--sans); }
+.series-strip a { display: flex; flex-direction: column; gap: 6px; height: 100%; padding: 20px 20px 22px 0; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); }
+.series-strip li + li a { padding-left: 20px; border-left: 1px solid var(--rule); }
+.series-strip b { font-size: var(--fs-md); font-weight: 700; transition: color var(--dur) var(--ease); }
+.series-strip a:hover b { color: var(--accent); }
+.series-strip .n { font-size: var(--fs-xs); color: var(--ink-3); line-height: 1.6; }
+@media (max-width: 860px) {
+  .series-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .series-strip li + li a { padding-left: 0; border-left: 0; }
+  .series-strip li:nth-child(even) a { padding-left: 16px; border-left: 1px solid var(--rule); }
+}
+
+/* 列表按月分组 */
+.month { display: flex; align-items: baseline; gap: 12px; font-family: var(--sans); font-size: var(--fs-sm); color: var(--ink); font-weight: 500; padding: 36px 0 6px; border-bottom: 1px solid var(--rule); margin: 0; }
+.month small { color: var(--ink-3); font-weight: 400; font-size: inherit; }
+
 /* 文章页 */
 .progress { position: fixed; left: 0; right: 0; top: env(safe-area-inset-top, 0px); height: 2px; z-index: 30; pointer-events: none; }
 .progress i { display: block; height: 100%; background: var(--accent); transform-origin: 0 50%; transform: scaleX(0); }

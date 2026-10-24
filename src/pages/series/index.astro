@@ -1,0 +1,40 @@
+---
+import Base from '../../layouts/Base.astro';
+import Shape from '../../components/Shape.astro';
+import { typeOf, urlOf, excerpt } from '../../lib/content';
+import { SERIES, seriesEntries } from '../../lib/series';
+
+const groups = await Promise.all(SERIES.map(async (s) => ({ s, list: await seriesEntries(s) })));
+const total = groups.reduce((n, g) => n + g.list.length, 0);
+---
+<Base title="专题" description="AI 工具、模型选型与成本的文章，按专题和阅读顺序整理。">
+  <div class="wrap">
+    <header class="page-head">
+      <h1>专题</h1>
+      <p>{total} 篇 AI 相关的文章和笔记，分成 {SERIES.length} 组，每组按阅读顺序排好。不知道从哪读起，就从每组的第一篇开始。</p>
+    </header>
+    <div class="series-grid">
+      {groups.map(({ s, list }, gi) => (
+        <section class="series" id={s.key}>
+          <div class="series-head">
+            <span class="series-no tnum">{String(gi + 1).padStart(2, '0')}</span>
+            <h2>{s.name}</h2>
+            <span class="count tnum">{list.length} 篇</span>
+          </div>
+          <p class="series-blurb">{s.blurb}</p>
+          <ol class="series-list">
+            {list.map((e, i) => (
+              <li>
+                <a href={urlOf(e)} title={excerpt(e, 60)}>
+                  <span class="i tnum">{i + 1}</span>
+                  <span class="tt">{e.data.title}</span>
+                  {typeOf(e) === 'notes' && <Shape type="notes" />}
+                </a>
+              </li>
+            ))}
+          </ol>
+        </section>
+      ))}
+    </div>
+  </div>
+</Base>
