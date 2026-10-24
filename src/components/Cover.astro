@@ -3,8 +3,9 @@
 import { Image } from 'astro:assets';
 import { coverPath } from '../lib/cover';
 import type { Entry } from '../lib/content';
-interface Props { entry: Entry; class?: string; widths?: number[]; sizes: string; eager?: boolean }
-const { entry, class: cls = '', widths = [400, 800, 1200], sizes, eager = false } = Astro.props;
+// wide：文章页 Banner，宽屏用 3:1 的宽版星图，窄屏仍用 1200×630 的标准版
+interface Props { entry: Entry; class?: string; widths?: number[]; sizes: string; eager?: boolean; wide?: boolean }
+const { entry, class: cls = '', widths = [400, 800, 1200], sizes, eager = false, wide = false } = Astro.props;
 const { cover, coverAlt = '' } = entry.data;
 const loading = eager ? 'eager' : 'lazy';
 ---
@@ -12,9 +13,11 @@ const loading = eager ? 'eager' : 'lazy';
   {cover ? (
     <Image src={cover} alt={coverAlt} widths={widths.filter((w) => w <= cover.width)} sizes={sizes} loading={loading} format="webp" />
   ) : (
-    <>
-      <img class="c-light" src={coverPath(entry, 'light')} alt="" width="1200" height="630" loading={loading} decoding="async" />
-      <img class="c-dark" src={coverPath(entry, 'dark')} alt="" width="1200" height="630" loading={loading} decoding="async" />
-    </>
+    (['light', 'dark'] as const).map((t) => (
+      <picture class={`c-${t}`}>
+        {wide && <source media="(min-width: 861px)" srcset={coverPath(entry, t, true)} width="1200" height="400" />}
+        <img src={coverPath(entry, t)} alt="" width="1200" height="630" loading={loading} decoding="async" />
+      </picture>
+    ))
   )}
 </div>

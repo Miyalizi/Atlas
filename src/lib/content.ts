@@ -31,6 +31,7 @@ export function plain(md = '') {
   return md
     .replace(/^---[\s\S]*?---/, '')
     .replace(/^import .*$/gm, '')
+    .replace(/\[!(NOTE|TIP|WARNING)\]\s*/g, '')
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')

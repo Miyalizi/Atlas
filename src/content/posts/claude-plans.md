@@ -35,6 +35,6 @@ description: $20、$100、$200 三档，分界线在哪里。
 - 长对话及时压缩或重开，见[上下文管理](/posts/context-management/)。
 - 批量杂活交给子 Agent 和便宜模型，见[模型路由](/posts/model-routing/)。
 
-> 国内用户注意：Anthropic 不支持中国大陆地区直接使用，相关风险见[在国内用海外模型](/posts/overseas-models-in-china/)。
+> [!WARNING] 国内用户：Anthropic 不支持中国大陆地区直接使用，相关风险见[在国内用海外模型](/posts/overseas-models-in-china/)。
 
 参考：[Claude Code Pricing & Plans (2026)](https://www.morphllm.com/claude-code-pricing)（2026-10-08，第三方汇总）。
