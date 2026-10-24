@@ -123,7 +123,7 @@ const host = (u: string) => { try { return new URL(u).host; } catch { return u; 
             );
           })}
         </section>
-        {!ser && <nav class="pager" aria-label="同类内容">
+        {!ser && (older || newer) && <nav class="pager" aria-label="同类内容">
           {older && <a href={urlOf(older)}>← 更早<b>{older.data.title}</b></a>}
           {newer && <a class="next" href={urlOf(newer)}>更新 →<b>{newer.data.title}</b></a>}
         </nav>}

@@ -33,7 +33,7 @@ npm run preview    # 本地预览构建结果
 ---
 title: 文章标题
 date: 2026-10-21
-tags: [摄影, AI]
+tags: [AI, 独立游戏]
 description: 一句话摘要，会显示在列表、搜索和 RSS 里（可选）
 draft: false        # 改成 true 就不会发布，本地开发时仍可见
 ---
@@ -52,7 +52,7 @@ draft: false        # 改成 true 就不会发布，本地开发时仍可见
 用普通的 Markdown 链接，写站内路径即可：
 
 ```markdown
-我在[暗房那篇](/posts/ai-darkroom/)里写过这件事。
+我在[Harness 那篇](/posts/harness-engineering/)里写过这件事。
 ```
 
 构建时会自动：
