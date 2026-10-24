@@ -4,9 +4,11 @@ import Base from '../layouts/Base.astro';
 import EntryRow from '../components/EntryRow.astro';
 import Shape from '../components/Shape.astro';
 import { SITE } from '../site.config';
+import { SERIES, seriesEntries } from '../lib/series';
 import { getGraph, TYPES, TYPE_KEYS, typeOf, urlOf, fmtDate, excerpt, topTags } from '../lib/content';
 
 const { entries, back, edges } = await getGraph();
+const series = await Promise.all(SERIES.map(async (s) => ({ s, list: await seriesEntries(s) })));
 const clusters = topTags(entries, 4);
 const graph = {
   clusters,
@@ -60,6 +62,19 @@ const NowContent = now ? (await render(now)).Content : null;
       <div class="section-head"><h2>最近</h2><a href="/archive/">全部归档 →</a></div>
       <ul class="list">
         {entries.slice(0, 8).map((e) => <EntryRow entry={e} />)}
+      </ul>
+    </section>
+
+    <section class="reveal">
+      <div class="section-head"><h2>专题</h2><a href="/series/">全部专题 →</a></div>
+      <ul class="series-strip">
+        {series.map(({ s, list }, i) => (
+          <li><a href={`/series/#${s.key}`}>
+            <span class="series-no tnum">{String(i + 1).padStart(2, '0')}</span>
+            <b>{s.name}</b>
+            <span class="n tnum">{list.length} 篇 · 从《{list[0]?.data.title}》读起</span>
+          </a></li>
+        ))}
       </ul>
     </section>
 

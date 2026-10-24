@@ -9,6 +9,13 @@ export function getStaticPaths() {
 const type = Astro.params.type as TypeKey;
 const { entries } = await getGraph();
 const list = entries.filter((e) => typeOf(e) === type);
+// 按月分组，大量同一时期的内容不再是一长串重复的日期
+const months = new Map<string, typeof list>();
+for (const e of list) {
+  const k = `${e.data.date.getFullYear()} 年 ${e.data.date.getMonth() + 1} 月`;
+  if (!months.has(k)) months.set(k, []);
+  months.get(k)!.push(e);
+}
 const intro: Record<TypeKey, string> = {
   posts: '花了时间想清楚、写完整的东西。',
   notes: '想到就记下的片段，可能以后会长成文章。',
@@ -24,7 +31,12 @@ const intro: Record<TypeKey, string> = {
       <p>{intro[type]}</p>
     </header>
     <div class="section-head"><h2 class="sans">全部</h2><span class="count tnum">{list.length} 条</span></div>
-    <ul class="list">{list.map((e) => <EntryRow entry={e} />)}</ul>
+    {[...months].map(([m, items]) => (
+      <section>
+        <h3 class="month tnum">{m}<small>{items.length} 条</small></h3>
+        <ul class="list">{items.map((e) => <EntryRow entry={e} />)}</ul>
+      </section>
+    ))}
     {!list.length && <p class="empty-note">这里还没有内容。在 <code>src/content/{type}/</code> 里新建一个 Markdown 文件就会出现在这里。</p>}
   </div>
 </Base>

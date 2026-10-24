@@ -39,6 +39,6 @@ Anthropic 公布的 Claude Code 平均花费约为每个开发者每个活跃日
 
 ## 一个容易忽略的点
 
-Cursor 的第三方模型是按 API 原价从预付额度里扣的，订阅本身不打折。而 Claude Max、ChatGPT Pro 是**固定价格换一大块额度**，用得越多越划算。这两种“订阅”本质不同，见 [Cursor 新套餐怎么选](/posts/cursor-2026-plans/)。
+Cursor 的第三方模型是按 API 原价从预付额度里扣的，订阅本身不打折。而 Claude Max、ChatGPT Pro 是**固定价格换一大块额度**，用得越多越划算。这两种“订阅”本质不同，见 [Cursor 新套餐怎么选](/posts/overseas-plans/#cursor)。
 
-具体每家怎么选档位：[Claude](/posts/claude-plans/)、[ChatGPT / Codex](/posts/chatgpt-codex-plans/)、[Google](/posts/google-ai-plans/)、[国产 Coding Plan](/posts/china-coding-plans/)。
+具体每家怎么选档位：[Claude](/posts/overseas-plans/#claude)、[ChatGPT / Codex](/posts/overseas-plans/#chatgpt-与-codex)、[Google](/posts/overseas-plans/#google)、[国产 Coding Plan](/posts/china-coding-plans/)。

@@ -14,7 +14,7 @@ Claude 现在有两个顶配：
 
 - **默认 Opus 5.5**。绝大多数任务，包括较难的重构，它都够了。
 - **Fable 5.1 只用在**：Opus 反复失败的疑难问题、需要长时间自主运行的大任务、对正确性要求极高的场景。
-- **订阅用户**：Fable 只包含在 Max 档，且最多用掉周限额的一半。Pro 用户想用要额外付费，见 [Claude Pro 还是 Max](/posts/claude-plans/)。
+- **订阅用户**：Fable 只包含在 Max 档，且最多用掉周限额的一半。Pro 用户想用要额外付费，见 [Claude Pro 还是 Max](/posts/overseas-plans/#claude)。
 
 另外，Opus 5.5 的默认推理强度是 medium，比上一代低一档。难题记得手动调高，而不是直接换 Fable。
 
